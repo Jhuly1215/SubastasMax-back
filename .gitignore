@@ -1,0 +1,84 @@
+# --- SO / editor ---
+.DS_Store
+Thumbs.db
+Icon?
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# --- Eclipse/STS ---
+.classpath
+.project
+.settings/
+
+# --- Salidas de build (Java/Maven/Gradle) ---
+target/
+build/
+out/
+dependency-reduced-pom.xml
+
+# (Mantén los wrappers en el repo)
+!mvnw
+!mvnw.cmd
+!.mvn/wrapper/maven-wrapper.jar
+!.mvn/wrapper/maven-wrapper.properties
+!.mvn/wrapper/MavenWrapperDownloader.java
+
+# --- Logs / dumps ---
+*.log
+logs/
+**/logs/
+spring.log
+*.pid
+hs_err_pid*
+replay_pid*
+heapdump.hprof
+*.hprof
+
+# --- Tests / reports ---
+surefire-reports/
+failsafe-reports/
+**/test-results/
+.jacoco/
+coverage/
+
+# --- Docker / Compose / env locales ---
+docker-compose.override.yml
+docker-compose.*.yml
+*.local.yml
+*.override.yml
+.env
+.env.*
+!.env.example
+*.tar
+
+# --- Secretos / certificados (¡NO subir!) ---
+secrets/        
+# Carpeta para los credentials de desarrollo ojito eh
+**/secrets/**
+**/*serviceAccountKey*.json
+**/*.jks
+**/*.p12
+**/*.pfx
+**/*.pem
+**/*.key
+**/*.crt
+**/*.der
+
+# --- Archivos temporales variados ---
+*.tmp
+*.bak
+*.orig
+
+# --- Node/Frontend (si tienes algún frontend dentro del monorepo) ---
+node_modules/
+dist/
+.tmp/
+.vscode/
+npm-debug.log*
+yarn-error.log*

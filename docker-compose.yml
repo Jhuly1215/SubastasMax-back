@@ -1,0 +1,41 @@
+services:
+  config-server:
+    build: ./config-server
+    container_name: config-server
+    ports: ["${CONFIG_PORT}:8888"]
+    volumes:
+      - ./config-repo:/config-repo:ro
+
+  discovery-service:
+    build: ./discovery-service
+    container_name: discovery-service
+    ports: ["${DISCOVERY_PORT}:8761"]
+    environment:
+      - SPRING_CONFIG_IMPORT=optional:configserver:${CONFIG_SERVER_URL}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+    depends_on: [config-server]
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports: ["${GATEWAY_PORT}:8080"]
+    environment:
+      - CONFIG_SERVER_URL=${CONFIG_SERVER_URL}
+      - EUREKA_DEFAULT_ZONE=${EUREKA_DEFAULT_ZONE}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER}
+    volumes:
+      - ${FIREBASE_SECRETS_HOST_PATH}:${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER}:ro
+    depends_on: [discovery-service, config-server]
+
+  a-service:
+    build: ./A-service
+    container_name: a-service
+    environment:
+      - CONFIG_SERVER_URL=${CONFIG_SERVER_URL}
+      - EUREKA_DEFAULT_ZONE=${EUREKA_DEFAULT_ZONE}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER}
+    volumes:
+      - ${FIREBASE_SECRETS_HOST_PATH}:${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER}:ro
+    depends_on: [discovery-service, config-server]

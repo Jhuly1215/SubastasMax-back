@@ -1,0 +1,6 @@
+# Mantén configs comunes, excluye overrides locales o secretos
+*local*.yml
+*override*.yml
+*secrets*.yml
+*.key
+*.pem
