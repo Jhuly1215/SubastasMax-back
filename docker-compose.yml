@@ -39,3 +39,63 @@ services:
     volumes:
       - ${FIREBASE_SECRETS_HOST_PATH}:${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER}:ro
     depends_on: [discovery-service, config-server]
+
+  auth-service:
+    build: ./auth-service
+    container_name: auth-service
+    environment:
+      - CONFIG_SERVER_URL=${CONFIG_SERVER_URL}
+      - EUREKA_DEFAULT_ZONE=${EUREKA_DEFAULT_ZONE}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER}
+    volumes:
+      - ${FIREBASE_SECRETS_HOST_PATH}:${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER}:ro
+    depends_on: [discovery-service, config-server]
+
+  auction-service:
+    build: ./auction-service
+    container_name: auction-service
+    environment:
+      - CONFIG_SERVER_URL=${CONFIG_SERVER_URL}
+      - EUREKA_DEFAULT_ZONE=${EUREKA_DEFAULT_ZONE}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER}
+    volumes:
+      - ${FIREBASE_SECRETS_HOST_PATH}:${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER}:ro
+    depends_on: [discovery-service, config-server]
+
+  bidding-service:
+    build: ./bidding-service
+    container_name: bidding-service
+    environment:
+      - CONFIG_SERVER_URL=${CONFIG_SERVER_URL}
+      - EUREKA_DEFAULT_ZONE=${EUREKA_DEFAULT_ZONE}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER}
+    volumes:
+      - ${FIREBASE_SECRETS_HOST_PATH}:${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER}:ro
+    depends_on: [discovery-service, config-server, auth-service]
+
+  wallet-service:
+    build: ./wallet-service
+    container_name: wallet-service
+    environment:
+      - CONFIG_SERVER_URL=${CONFIG_SERVER_URL}
+      - EUREKA_DEFAULT_ZONE=${EUREKA_DEFAULT_ZONE}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER}
+    volumes:
+      - ${FIREBASE_SECRETS_HOST_PATH}:${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER}:ro
+    depends_on: [discovery-service, config-server, auth-service]
+
+  admin-service:
+    build: ./admin-service
+    container_name: admin-service
+    environment:
+      - CONFIG_SERVER_URL=${CONFIG_SERVER_URL}
+      - EUREKA_DEFAULT_ZONE=${EUREKA_DEFAULT_ZONE}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER}
+    volumes:
+      - ${FIREBASE_SECRETS_HOST_PATH}:${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER}:ro
+    depends_on: [discovery-service, config-server, auth-service]
