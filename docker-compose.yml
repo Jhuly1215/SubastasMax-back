@@ -5,6 +5,14 @@ services:
     ports: ["${CONFIG_PORT}:8888"]
     volumes:
       - ./config-repo:/config-repo:ro
+    networks:
+      - subastas-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
 
   discovery-service:
     build: ./discovery-service
@@ -13,7 +21,17 @@ services:
     environment:
       - SPRING_CONFIG_IMPORT=optional:configserver:${CONFIG_SERVER_URL}
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
-    depends_on: [config-server]
+    networks:
+      - subastas-network
+    depends_on:
+      config-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
 
   api-gateway:
     build: ./api-gateway
@@ -26,11 +44,18 @@ services:
       - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER}
     volumes:
       - ${FIREBASE_SECRETS_HOST_PATH}:${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER}:ro
-    depends_on: [discovery-service, config-server]
+    networks:
+      - subastas-network
+    depends_on:
+      config-server:
+        condition: service_healthy
+      discovery-service:
+        condition: service_healthy
+    restart: on-failure
 
   a-service:
     build: ./A-service
-    container_name: a-service
+    container_name: A-service
     environment:
       - CONFIG_SERVER_URL=${CONFIG_SERVER_URL}
       - EUREKA_DEFAULT_ZONE=${EUREKA_DEFAULT_ZONE}
@@ -38,7 +63,14 @@ services:
       - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER}
     volumes:
       - ${FIREBASE_SECRETS_HOST_PATH}:${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER}:ro
-    depends_on: [discovery-service, config-server]
+    networks:
+      - subastas-network
+    depends_on:
+      config-server:
+        condition: service_healthy
+      discovery-service:
+        condition: service_healthy
+    restart: on-failure
 
   auth-service:
     build: ./auth-service
@@ -50,7 +82,14 @@ services:
       - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER}
     volumes:
       - ${FIREBASE_SECRETS_HOST_PATH}:${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER}:ro
-    depends_on: [discovery-service, config-server]
+    networks:
+      - subastas-network
+    depends_on:
+      config-server:
+        condition: service_healthy
+      discovery-service:
+        condition: service_healthy
+    restart: on-failure
 
   auction-service:
     build: ./auction-service
@@ -62,7 +101,14 @@ services:
       - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER}
     volumes:
       - ${FIREBASE_SECRETS_HOST_PATH}:${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER}:ro
-    depends_on: [discovery-service, config-server]
+    networks:
+      - subastas-network
+    depends_on:
+      config-server:
+        condition: service_healthy
+      discovery-service:
+        condition: service_healthy
+    restart: on-failure
 
   bidding-service:
     build: ./bidding-service
@@ -74,7 +120,16 @@ services:
       - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER}
     volumes:
       - ${FIREBASE_SECRETS_HOST_PATH}:${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER}:ro
-    depends_on: [discovery-service, config-server, auth-service]
+    networks:
+      - subastas-network
+    depends_on:
+      config-server:
+        condition: service_healthy
+      discovery-service:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+    restart: on-failure
 
   wallet-service:
     build: ./wallet-service
@@ -86,7 +141,16 @@ services:
       - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER}
     volumes:
       - ${FIREBASE_SECRETS_HOST_PATH}:${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER}:ro
-    depends_on: [discovery-service, config-server, auth-service]
+    networks:
+      - subastas-network
+    depends_on:
+      config-server:
+        condition: service_healthy
+      discovery-service:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+    restart: on-failure
 
   admin-service:
     build: ./admin-service
@@ -98,4 +162,17 @@ services:
       - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER}
     volumes:
       - ${FIREBASE_SECRETS_HOST_PATH}:${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER}:ro
-    depends_on: [discovery-service, config-server, auth-service]
+    networks:
+      - subastas-network
+    depends_on:
+      config-server:
+        condition: service_healthy
+      discovery-service:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+    restart: on-failure
+
+networks:
+  subastas-network:
+    driver: bridge
