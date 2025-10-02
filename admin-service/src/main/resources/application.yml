@@ -1,6 +1,6 @@
 spring:
   application:
-    name: api-gateway
+    name: admin-service
   config:
     # Usa el Config Server si está; si no, sigue (no falla)
     import: 'optional:configserver:${CONFIG_SERVER_URL:http://config-server:8888}'
