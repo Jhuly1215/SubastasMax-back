@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### fireBase ###
+src/main/resources/wallet-service-key.json
