@@ -1,4 +1,4 @@
-package SubastasMax.config;
+package SubastasMax.bidding_service.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
