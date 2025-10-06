@@ -1,9 +1,9 @@
-package SubastasMax.A_service;
+package SubastasMax.wallet_service;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "SubastasMax")
 public class WalletServiceApplication {
 
 	public static void main(String[] args) {

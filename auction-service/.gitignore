@@ -31,3 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### fireBase ###
+src/main/resources/auction-service-key.json
+
