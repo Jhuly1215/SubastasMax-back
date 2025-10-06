@@ -14,7 +14,7 @@ eureka:
 
 firebase:
   database:
-    url: https://auction-service-1c333.firebaseio.com
+    url: https://wallet-service-7ce34.firebaseio.com
   config:
     path: classpath:firebase-service-account.json
 
