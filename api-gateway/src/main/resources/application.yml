@@ -4,7 +4,22 @@ spring:
   config:
     # Usa el Config Server si está; si no, sigue (no falla)
     import: 'optional:configserver:${CONFIG_SERVER_URL:http://config-server:8888}'
-  
+  cloud:
+    gateway:
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_FIRST
+      routes:
+        - id: bidding-ws
+          uri: http://bidding-service:8090  # <-- cambia ws:// por http://
+          predicates:
+            - Path=/bidding-ws/**
+          filters:
+            - RemoveRequestHeader=Sec-WebSocket-Extensions
+            - name: RewritePath
+              args:
+                regexp: "/bidding-ws/(?<remaining>.*)"
+                replacement: "/bidding-ws/${remaining}"
+
 
 eureka:
   client:
