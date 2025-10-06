@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: admin-service
+  config:
+    # Usa el Config Server si está; si no, sigue (no falla)
+    import: 'optional:configserver:${CONFIG_SERVER_URL:http://config-server:8888}'
+  
+
+eureka:
+  client:
+    serviceUrl:
+      # En local usa localhost; en docker puedes sobreescribir por ENV
+      defaultZone: ${EUREKA_DEFAULT_ZONE:http://discovery-service:8761/eureka}
+
+management.endpoints.web.exposure.include: health,info
