@@ -1,6 +1,6 @@
-package SubastasMax.controller;
+package SubastasMax.bidding_service.controller;
 
-import SubastasMax.model.Bid;
+import SubastasMax.bidding_service.model.Bid;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;

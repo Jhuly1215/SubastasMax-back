@@ -1,4 +1,4 @@
-package SubastasMax.config;
+/*package SubastasMax.bidding_service.config;
 
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.cloud.FirestoreClient;
@@ -16,3 +16,4 @@ public class FirebaseConfig {
   @Bean public Firestore firestore() { return FirestoreClient.getFirestore(); }
 }
 
+*/
