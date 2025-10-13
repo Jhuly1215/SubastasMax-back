@@ -1,12 +1,21 @@
-FROM maven:3.9.6-eclipse-temurin-21 AS build
+# ===== Build =====
+FROM maven:3.9.9-eclipse-temurin-17 AS build
 WORKDIR /app
 COPY pom.xml .
+RUN mvn -q -e -DskipTests=true dependency:go-offline
 COPY src ./src
-RUN mvn -q -DskipTests package
+RUN mvn -q -DskipTests=true clean package
 
-FROM eclipse-temurin:21-jre
-WORKDIR /app
-ENV JAVA_OPTS="-Djava.security.egd=file:/dev/./urandom"
+# ===== Run =====
+FROM eclipse-temurin:17-jre
+ENV JAVA_OPTS=""
+ENV PORT=8080
+WORKDIR /opt/app
 COPY --from=build /app/target/*.jar app.jar
-# No es necesario exponer puerto: el gateway enruta a través de Eureka
-ENTRYPOINT ["sh","-c","java $JAVA_OPTS -jar /app/app.jar"]
+
+# Si usas archivo de credenciales:
+# COPY firebase-service-account.json /secrets/firebase.json
+# ENV FIREBASE_CREDENTIALS_FILE=/secrets/firebase.json
+
+EXPOSE 8080
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
