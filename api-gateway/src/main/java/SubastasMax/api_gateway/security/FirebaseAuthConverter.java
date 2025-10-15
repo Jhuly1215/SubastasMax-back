@@ -1,4 +1,4 @@
-package SubastasMax.security;
+package SubastasMax.api_gateway.security;
 
 import com.google.firebase.auth.FirebaseAuth;
 import org.springframework.http.HttpHeaders;
@@ -6,12 +6,13 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.server.authentication.ServerAuthenticationConverter;
-import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 import java.util.List;
 
-@Component
+import org.springframework.context.annotation.Profile;
+
+@Profile("gateway-auth")
 public class FirebaseAuthConverter implements ServerAuthenticationConverter {
   @Override
   public Mono<Authentication> convert(ServerWebExchange exchange) {
