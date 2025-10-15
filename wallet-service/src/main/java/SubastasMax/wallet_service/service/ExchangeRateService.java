@@ -6,6 +6,9 @@ import SubastasMax.wallet_service.model.ExchangeRate;
 import SubastasMax.wallet_service.repository.ExchangeRateRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Service
 public class ExchangeRateService {
 
@@ -42,11 +45,29 @@ public class ExchangeRateService {
     }
 
     private ExchangeRateResponseDTO toResponseDTO(ExchangeRate exchangeRate) {
+        // Convertir explícitamente todos los valores a Double
+        Map<String, Double> convertedRates = convertRatesToDouble(exchangeRate.getRates());
+        
         return new ExchangeRateResponseDTO(
             exchangeRate.getId(),
             exchangeRate.getDate(),
-            exchangeRate.getRates(),
+            convertedRates,
             exchangeRate.getUpdatedAt()
         );
+    }
+    
+    private Map<String, Double> convertRatesToDouble(Map<String, Double> rates) {
+        if (rates == null) {
+            return new HashMap<>();
+        }
+        
+        Map<String, Double> convertedRates = new HashMap<>();
+        for (Map.Entry<String, Double> entry : rates.entrySet()) {
+            Double value = entry.getValue();
+            // Asegurarse de que el valor es realmente Double
+            convertedRates.put(entry.getKey(), value != null ? value : 0.0);
+        }
+        
+        return convertedRates;
     }
 }
