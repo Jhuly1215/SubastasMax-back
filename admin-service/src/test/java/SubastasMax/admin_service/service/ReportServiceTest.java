@@ -1,77 +1,88 @@
 package SubastasMax.admin_service.service;
 
-     import SubastasMax.admin_service.model.Bid;
-     import SubastasMax.admin_service.model.Event;
-     import SubastasMax.admin_service.model.User;
-     import SubastasMax.admin_service.repository.BidRepository;
-     import SubastasMax.admin_service.repository.EventRepository;
-     import SubastasMax.admin_service.repository.UserRepository;
-     import org.junit.Test;
-     import org.junit.Before;
-     import org.mockito.InjectMocks;
-     import org.mockito.Mock;
-     import org.mockito.MockitoAnnotations;
+import SubastasMax.admin_service.model.Bid;
+import SubastasMax.admin_service.model.Event;
+import SubastasMax.admin_service.model.User;
+import SubastasMax.admin_service.repository.BidRepository;
+import SubastasMax.admin_service.repository.EventRepository;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-     import java.util.List;
-     import java.util.Map;
-     import java.util.Optional;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 
-     import static org.junit.Assert.assertEquals;
-     import static org.mockito.Mockito.when;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.when;
 
-     public class ReportServiceTest {
+public class ReportServiceTest {
 
-         @Before
-         public void setUp() {
-             MockitoAnnotations.openMocks(this);
-         }
+    @Mock
+    private BidRepository bidRepository;
 
-         @Mock
-         private BidRepository bidRepository;
+    @Mock
+    private EventRepository eventRepository;
 
-         @Mock
-         private EventRepository eventRepository;
+    @Mock
+    private FirestoreUserService firestoreUserService;
 
-         @Mock
-         private UserRepository userRepository;
+    @InjectMocks
+    private ReportService reportService;
 
-         @InjectMocks
-         private ReportService reportService;
+    @Before
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
 
-         @Test
-         public void testGenerateAuctionReport() {
-             Long eventId = 1L;
-             Event event = new Event();
-             event.setId(eventId);
-             event.setTitle("Test Auction");
-             Bid bid = new Bid();
-             bid.setEventId(eventId);
-             bid.setAmount(100.0);
-             List<Bid> bids = List.of(bid);
+    @Test
+    public void testGenerateAuctionReport() throws ExecutionException, InterruptedException {
+        // Arrange
+        Long eventId = 1L;
+        Event event = new Event();
+        event.setId(eventId);
+        event.setTitle("Test Auction");
+        event.setStatus("active");
+        event.setParticipants(2); // 🔹 Corregido: usa un entero, no una lista
 
-             when(eventRepository.findById(eventId)).thenReturn(Optional.of(event));
-             when(bidRepository.findByEventId(eventId)).thenReturn(bids);
+        Bid bid = new Bid();
+        bid.setEventId(eventId);
+        bid.setAmount(100.0);
 
-             Map<String, Object> report = reportService.generateAuctionReport(eventId);
-             assertEquals(event, report.get("event"));
-             assertEquals(1, report.get("totalBids"));
-             assertEquals(100.0, report.get("totalRevenue"));
-             assertEquals(100.0, report.get("highestBid"));
-         }
+        List<Bid> bids = List.of(bid);
 
-         @Test
-         public void testGenerateUserReport() {
-             User user = new User();
-             user.setStatus("active");
-             user.setReputation(4.5);
-             List<User> users = List.of(user);
+        when(eventRepository.findById(eventId)).thenReturn(Optional.of(event));
+        when(bidRepository.findByEventId(eventId)).thenReturn(bids);
 
-             when(userRepository.findAll()).thenReturn(users);
+        // Act
+        Map<String, Object> report = reportService.generateAuctionReport(eventId);
 
-             Map<String, Object> report = reportService.generateUserReport();
-             assertEquals(1, report.get("totalUsers"));
-             assertEquals(1, report.get("activeUsers"));
-             assertEquals(4.5, report.get("averageReputation"));
-         }
-     }
-     
+        // Assert
+        assertEquals(event, report.get("event"));
+        assertEquals(1, report.get("totalBids"));
+        assertEquals(100.0, (double) report.get("totalRevenue"), 0.001);
+        assertEquals(100.0, (double) report.get("highestBid"), 0.001);
+    }
+
+    @Test
+    public void testGenerateUserReport() throws ExecutionException, InterruptedException {
+        // Arrange
+        User user = new User();
+        user.setStatus("active");
+        user.setReputation(4.5);
+
+        List<User> users = List.of(user);
+        when(firestoreUserService.getAllUsers()).thenReturn(users);
+
+        // Act
+        Map<String, Object> report = reportService.generateUserReport();
+
+        // Assert
+        assertEquals(1, report.get("totalUsers"));
+        assertEquals(1L, report.get("activeUsers"));
+        assertEquals(4.5, (double) report.get("averageReputation"), 0.001);
+    }
+}

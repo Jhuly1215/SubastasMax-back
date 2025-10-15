@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 
 @RestController
 @RequestMapping("/api/auctions")
@@ -45,6 +46,9 @@ public class EventController {
             return ResponseEntity.ok(new BidResponse(true, bid, null));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(new BidResponse(false, null, e.getMessage()));
+        } catch (ExecutionException | InterruptedException e) {
+            return ResponseEntity.internalServerError()
+                    .body(new BidResponse(false, null, "Error al procesar la puja"));
         }
     }
 
