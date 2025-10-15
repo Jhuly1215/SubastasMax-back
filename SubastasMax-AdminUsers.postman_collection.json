@@ -1,0 +1,140 @@
+{
+    "info": {
+      "name": "SubastasMax - Auth & Roles",
+      "_postman_id": "5e8c0d38-b8e2-4d7f-9f1a-000000000001",
+      "description": "Colección para probar auth/me y CRUD de usuarios/roles vía API Gateway y directo al auth-service.",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+      { "key": "gateway", "value": "http://localhost:8080" },
+      { "key": "auth_service", "value": "http://localhost:8081" },
+      { "key": "id_token", "value": "" },
+      { "key": "admin_uid", "value": "ilGkBD0WlhdvBKjxTIK5qdPYQ3z2" },
+      { "key": "test_uid", "value": "ilGkBD0WlhdvBKjxTIK5qdPYQ3z2" },
+      { "key": "new_user_email", "value": "nuevo@example.com" },
+      { "key": "new_user_password", "value": "Secreta123!" },
+      { "key": "to_delete_uid", "value": "REEMPLAZAR_POR_UID_A_BORRAR" }
+    ],
+    "item": [
+      {
+        "name": "Health - Gateway",
+        "request": {
+          "method": "GET",
+          "url": "{{gateway}}/actuator/health"
+        }
+      },
+      {
+        "name": "Health - Auth Service directo",
+        "request": {
+          "method": "GET",
+          "url": "{{auth_service}}/actuator/health"
+        }
+      },
+      {
+        "name": "Auth /me (Gateway)",
+        "request": {
+          "method": "GET",
+          "header": [
+            { "key": "Authorization", "value": "Bearer {{id_token}}", "type": "text" }
+          ],
+          "url": "{{gateway}}/auth/me"
+        }
+      },
+      {
+        "name": "Auth /me (Directo a Auth Service)",
+        "request": {
+          "method": "GET",
+          "header": [
+            { "key": "Authorization", "value": "Bearer {{id_token}}", "type": "text" }
+          ],
+          "url": "{{auth_service}}/auth/me"
+        }
+      },
+      {
+        "name": "Roles - Listar roles válidos (ADMIN)",
+        "request": {
+          "method": "GET",
+          "header": [
+            { "key": "Authorization", "value": "Bearer {{id_token}}", "type": "text" }
+          ],
+          "url": "{{gateway}}/admin/roles"
+        }
+      },
+      {
+        "name": "Roles - Asignar ADMIN a admin_uid (syncClaims=true) (ADMIN)",
+        "request": {
+          "method": "PUT",
+          "header": [
+            { "key": "Authorization", "value": "Bearer {{id_token}}", "type": "text" },
+            { "key": "Content-Type", "value": "application/json" }
+          ],
+          "url": "{{gateway}}/admin/roles?syncClaims=true",
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"uid\": \"{{admin_uid}}\",\n  \"roles\": [\"ADMIN\"]\n}"
+          }
+        }
+      },
+      {
+        "name": "Usuarios - Crear (syncClaims=true) (ADMIN)",
+        "request": {
+          "method": "POST",
+          "header": [
+            { "key": "Authorization", "value": "Bearer {{id_token}}", "type": "text" },
+            { "key": "Content-Type", "value": "application/json" }
+          ],
+          "url": "{{gateway}}/admin/users?syncClaims=true",
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"email\": \"{{new_user_email}}\",\n  \"password\": \"{{new_user_password}}\",\n  \"displayName\": \"Nuevo User\",\n  \"roles\": [\"PARTICIPANTE\"]\n}"
+          }
+        }
+      },
+      {
+        "name": "Usuarios - Obtener (ADMIN)",
+        "request": {
+          "method": "GET",
+          "header": [
+            { "key": "Authorization", "value": "Bearer {{id_token}}", "type": "text" }
+          ],
+          "url": "{{gateway}}/admin/users/{{test_uid}}"
+        }
+      },
+      {
+        "name": "Usuarios - Listar (ADMIN)",
+        "request": {
+          "method": "GET",
+          "header": [
+            { "key": "Authorization", "value": "Bearer {{id_token}}", "type": "text" }
+          ],
+          "url": "{{gateway}}/admin/users?size=50"
+        }
+      },
+      {
+        "name": "Usuarios - Actualizar displayName y roles (syncClaims=true) (ADMIN)",
+        "request": {
+          "method": "PUT",
+          "header": [
+            { "key": "Authorization", "value": "Bearer {{id_token}}", "type": "text" },
+            { "key": "Content-Type", "value": "application/json" }
+          ],
+          "url": "{{gateway}}/admin/users/{{test_uid}}?syncClaims=true",
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"displayName\": \"Tester Admin\",\n  \"roles\": [\"ADMIN\", \"SUBASTADOR\"]\n}"
+          }
+        }
+      },
+      {
+        "name": "Usuarios - Borrar (ADMIN)",
+        "request": {
+          "method": "DELETE",
+          "header": [
+            { "key": "Authorization", "value": "Bearer {{id_token}}", "type": "text" }
+          ],
+          "url": "{{gateway}}/admin/users/{{to_delete_uid}}"
+        }
+      }
+    ]
+  }
+  
