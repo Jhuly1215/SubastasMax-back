@@ -119,6 +119,8 @@ services:
   bidding-service:
     build: ./bidding-service
     container_name: bidding-service
+    ports:
+      - "8090:8090"
     environment:
       - CONFIG_SERVER_URL=${CONFIG_SERVER_URL}
       - EUREKA_DEFAULT_ZONE=${EUREKA_DEFAULT_ZONE}

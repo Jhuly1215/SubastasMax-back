@@ -15,7 +15,10 @@ spring:
           uri: lb://auth-service
           predicates:
             - Path=/admin/**
-    
+        - id: bidding-ws
+          uri: http://bidding-service:8090
+          predicates:
+            - Path=/bidding-ws/**
 
 eureka:
   client:
