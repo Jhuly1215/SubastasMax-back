@@ -75,13 +75,18 @@ services:
   auth-service:
     build: ./auth-service
     container_name: auth-service
+    ports:
+      - "8081:8081"
+    env_file:
+      - ./auth-service/.env
     environment:
       - CONFIG_SERVER_URL=${CONFIG_SERVER_URL}
       - EUREKA_DEFAULT_ZONE=${EUREKA_DEFAULT_ZONE}
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
-      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER}
+      - FIREBASE_SECRETS_DIR=${FIREBASE_SECRETS_DIR_CONTAINER}
+      - SERVER_PORT=8081
     volumes:
-      - ${FIREBASE_SECRETS_HOST_PATH}:${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER}:ro
+      - ${FIREBASE_SECRETS_DIR_HOST}:${FIREBASE_SECRETS_DIR_CONTAINER}:ro
     networks:
       - subastas-network
     depends_on:
@@ -90,6 +95,7 @@ services:
       discovery-service:
         condition: service_healthy
     restart: on-failure
+
 
   auction-service:
     build: ./auction-service
@@ -113,6 +119,8 @@ services:
   bidding-service:
     build: ./bidding-service
     container_name: bidding-service
+    ports:
+      - "8090:8090"
     environment:
       - CONFIG_SERVER_URL=${CONFIG_SERVER_URL}
       - EUREKA_DEFAULT_ZONE=${EUREKA_DEFAULT_ZONE}

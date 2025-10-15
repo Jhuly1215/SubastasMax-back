@@ -49,7 +49,7 @@ public class AuctionService {
                     .visibility(request.getVisibility())
                     .scheduledDate(dateToTimestamp(request.getScheduledDate()))
                     .scheduledTime(dateToTimestamp(request.getScheduledTime()))
-                    .status("draft") // Estado inicial
+                    .status("upcoming") // Estado inicial
                     .createdBy(userId)
                     .totalBids(0)
                     .uniqueBidders(0)
