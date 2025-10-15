@@ -180,6 +180,29 @@ services:
       auth-service:
         condition: service_started
     restart: on-failure
+  chat-service:
+    build: ./chat-service
+    container_name: chat-service
+    ports:
+      - "8090:8090"
+    environment:
+      - CONFIG_SERVER_URL=${CONFIG_SERVER_URL}
+      - EUREKA_DEFAULT_ZONE=${EUREKA_DEFAULT_ZONE}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER}
+    volumes:
+      - ${FIREBASE_SECRETS_HOST_PATH}:${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER}:ro
+    networks:
+      - subastas-network
+    depends_on:
+      config-server:
+        condition: service_healthy
+      discovery-service:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+    restart: on-failure
+
 
 networks:
   subastas-network:
