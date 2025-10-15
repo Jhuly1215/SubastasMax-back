@@ -1,4 +1,4 @@
-package SubastasMax.model;
+package SubastasMax.bidding_service.model;
 
 public class Bid {
     private String auctionId;
