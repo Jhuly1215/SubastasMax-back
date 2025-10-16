@@ -3,7 +3,6 @@ spring:
     name: api-gateway
   config:
     import: 'optional:configserver:${CONFIG_SERVER_URL:http://config-server:8888}'
-
   cloud:
     gateway:
       routes:
@@ -12,9 +11,11 @@ spring:
           predicates:
             - Path=/auth/**
         - id: admin-users
-          uri: lb://auth-service
+          uri: http://admin-service:8070  # ← Puerto 8070
           predicates:
             - Path=/admin/**
+          filters:
+            - RewritePath=/admin/(?<segment>.*), /$\{segment}
         - id: bidding-ws
           uri: http://bidding-service:8090
           predicates:
