@@ -9,5 +9,8 @@ public record CreateUserRequest(
     @Email @NotBlank String email,
     @NotBlank String password,
     String displayName,
-    List<String> roles // opcional; default PARTICIPANTE si null/vacío
+    List<String> roles,
+    String avatarUrl,   // opcional
+    String phone        // opcional
 ) {}
+
