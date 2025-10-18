@@ -54,16 +54,19 @@ public class UserAdminService {
 
     private UserResponse toResponse(UserRecord ur, List<String> roles) throws Exception {
         Map<String, Object> extras = userService.getProfileExtras(ur.getUid());
+        String plan = (String) extras.getOrDefault("plan", "FREE");
         return new UserResponse(
                 ur.getUid(),
                 ur.getEmail(),
                 ur.getDisplayName(),
                 ur.isDisabled(),
-                roles == null ? List.of() : roles,
+                roles == null ? java.util.List.of() : roles,
                 (String) extras.get("avatarUrl"),
-                (String) extras.get("phone")
+                (String) extras.get("phone"),
+                plan
         );
     }
+    
 
     // ===== CRUD =====
 
@@ -127,7 +130,8 @@ public class UserAdminService {
                     user.isDisabled(),
                     roles == null ? List.of() : roles,
                     (String) extras.get("avatarUrl"),
-                    (String) extras.get("phone")
+                    (String) extras.get("phone"),
+                    (String) extras.getOrDefault("plan", "FREE")
             ));
             if (out.size() >= maxResults) break;
         }
