@@ -1,4 +1,4 @@
-package SubastasMax.security;
+package SubastasMax.wallet_service.security;
 
 import java.io.IOException;
 import java.util.List;
