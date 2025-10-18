@@ -1,177 +1,344 @@
 {
-    "info": {
-      "name": "SubastasMax - Auth (Firebase + Gateway)",
-      "_postman_id": "f7b0f8a1-1111-2222-3333-444455556666",
-      "description": "Flujo: Sign Up / Sign In (Firebase) -> usar ID token en /auth/me y /admin/roles via API Gateway.",
-      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-    },
-    "item": [
-      {
-        "name": "Firebase - Sign Up (email/password)",
-        "request": {
-          "method": "POST",
-          "header": [
-            { "key": "Content-Type", "value": "application/json" }
-          ],
-          "url": {
-            "raw": "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key={{FIREBASE_API_KEY}}",
-            "protocol": "https",
-            "host": [ "identitytoolkit", "googleapis", "com" ],
-            "path": [ "v1", "accounts:signUp" ],
-            "query": [
-              { "key": "key", "value": "{{FIREBASE_API_KEY}}" }
-            ]
-          },
-          "body": {
-            "mode": "raw",
-            "raw": "{\n  \"email\": \"{{TEST_EMAIL}}\",\n  \"password\": \"{{TEST_PASSWORD}}\",\n  \"returnSecureToken\": true\n}"
-          },
-          "description": "Crea un usuario de Firebase (Email/Password). Guarda idToken/refreshToken/localId en variables."
-        },
-        "response": [],
-        "event": [
-          {
-            "listen": "test",
-            "script": {
-              "exec": [
-                "pm.test(\"Sign Up 200\", function () {",
-                "  pm.response.to.have.status(200);",
-                "});",
-                "",
-                "const json = pm.response.json();",
-                "pm.environment.set(\"ID_TOKEN\", json.idToken || \"\");",
-                "pm.environment.set(\"REFRESH_TOKEN\", json.refreshToken || \"\");",
-                "pm.environment.set(\"UID\", json.localId || \"\");",
-                "pm.environment.set(\"EMAIL\", json.email || pm.environment.get(\"TEST_EMAIL\"));"
-              ],
-              "type": "text/javascript"
-            }
-          }
-        ]
-      },
-      {
-        "name": "Firebase - Sign In (email/password)",
-        "request": {
-          "method": "POST",
-          "header": [
-            { "key": "Content-Type", "value": "application/json" }
-          ],
-          "url": {
-            "raw": "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={{FIREBASE_API_KEY}}",
-            "protocol": "https",
-            "host": [ "identitytoolkit", "googleapis", "com" ],
-            "path": [ "v1", "accounts:signInWithPassword" ],
-            "query": [
-              { "key": "key", "value": "{{FIREBASE_API_KEY}}" }
-            ]
-          },
-          "body": {
-            "mode": "raw",
-            "raw": "{\n  \"email\": \"{{TEST_EMAIL}}\",\n  \"password\": \"{{TEST_PASSWORD}}\",\n  \"returnSecureToken\": true\n}"
-          },
-          "description": "Inicia sesión y obtiene un ID token nuevo. Guarda idToken/refreshToken/localId."
-        },
-        "response": [],
-        "event": [
-          {
-            "listen": "test",
-            "script": {
-              "exec": [
-                "pm.test(\"Sign In 200\", function () {",
-                "  pm.response.to.have.status(200);",
-                "});",
-                "",
-                "const json = pm.response.json();",
-                "pm.environment.set(\"ID_TOKEN\", json.idToken || \"\");",
-                "pm.environment.set(\"REFRESH_TOKEN\", json.refreshToken || \"\");",
-                "pm.environment.set(\"UID\", json.localId || \"\");",
-                "pm.environment.set(\"EMAIL\", json.email || pm.environment.get(\"TEST_EMAIL\"));"
-              ],
-              "type": "text/javascript"
-            }
-          }
-        ]
-      },
-      {
-        "name": "Gateway -> /auth/me (Bearer {{ID_TOKEN}})",
-        "request": {
-          "method": "GET",
-          "header": [
-            { "key": "Authorization", "value": "Bearer {{ID_TOKEN}}", "type": "text" }
-          ],
-          "url": {
-            "raw": "{{GATEWAY_BASE_URL}}/auth/me",
-            "host": [ "{{GATEWAY_BASE_URL}}" ],
-            "path": [ "auth", "me" ]
-          },
-          "description": "Devuelve uid, email y roles del usuario autenticado."
-        },
-        "response": [],
-        "event": [
-          {
-            "listen": "test",
-            "script": {
-              "exec": [
-                "pm.test(\"/auth/me 200\", function () {",
-                "  pm.response.to.have.status(200);",
-                "});",
-                "const json = pm.response.json();",
-                "pm.environment.set(\"CURRENT_UID\", json.uid || \"\");",
-                "pm.environment.set(\"CURRENT_ROLES\", (json.roles || []).join(\",\"));"
-              ],
-              "type": "text/javascript"
-            }
-          }
-        ]
-      },
-      {
-        "name": "Gateway -> /admin/roles (PUT) (requires ADMIN)",
-        "request": {
-          "method": "PUT",
-          "header": [
-            { "key": "Authorization", "value": "Bearer {{ID_TOKEN}}", "type": "text" },
-            { "key": "Content-Type", "value": "application/json" }
-          ],
-          "url": {
-            "raw": "{{GATEWAY_BASE_URL}}/admin/roles?syncClaims=true",
-            "host": [ "{{GATEWAY_BASE_URL}}" ],
-            "path": [ "admin", "roles" ],
-            "query": [
-              { "key": "syncClaims", "value": "true" }
-            ]
-          },
-          "body": {
-            "mode": "raw",
-            "raw": "{\n  \"uid\": \"{{TARGET_UID}}\",\n  \"roles\": [\"ADMIN\", \"SUBASTADOR\"]\n}"
-          },
-          "description": "Asigna roles al UID objetivo. Requiere que el token usado tenga rol ADMIN. Con syncClaims=true, también empuja 'roles' a custom claims en Firebase."
-        },
-        "response": [],
-        "event": [
-          {
-            "listen": "test",
-            "script": {
-              "exec": [
-                "pm.test(\"/admin/roles 200\", function () {",
-                "  pm.response.to.have.status(200);",
-                "});"
-              ],
-              "type": "text/javascript"
-            }
-          }
-        ]
-      }
-    ],
-    "event": [],
-    "variable": [
-      { "key": "FIREBASE_API_KEY", "value": "<TU_API_KEY_WEB_DE_FIREBASE>" },
-      { "key": "GATEWAY_BASE_URL", "value": "http://localhost:8080" },
-      { "key": "TEST_EMAIL", "value": "tester@example.com" },
-      { "key": "TEST_PASSWORD", "value": "Password123!" },
-      { "key": "ID_TOKEN", "value": "" },
-      { "key": "REFRESH_TOKEN", "value": "" },
-      { "key": "UID", "value": "" },
-      { "key": "TARGET_UID", "value": "" }
-    ]
-  }
-  
+	"info": {
+		"_postman_id": "cf01898e-634a-4e65-8a5b-6a1ebcc26c01",
+		"name": "SubastasMax - Auth (Firebase + Gateway)",
+		"description": "Flujo: Sign Up / Sign In (Firebase) -> usar ID token en /auth/me y /admin/roles via API Gateway.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "39583489",
+		"_collection_link": "https://lunar-eclipse-365832.postman.co/workspace/My-Workspace~f0c3f70f-3ac8-4e5c-8068-b55a3ff65753/collection/39583489-cf01898e-634a-4e65-8a5b-6a1ebcc26c01?action=share&source=collection_link&creator=39583489"
+	},
+	"item": [
+		{
+			"name": "Firebase - Sign Up (email/password)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Sign Up 200\", function () {",
+							"  pm.response.to.have.status(200);",
+							"});",
+							"",
+							"const json = pm.response.json();",
+							"pm.environment.set(\"ID_TOKEN\", json.idToken || \"\");",
+							"pm.environment.set(\"REFRESH_TOKEN\", json.refreshToken || \"\");",
+							"pm.environment.set(\"UID\", json.localId || \"\");",
+							"pm.environment.set(\"EMAIL\", json.email || pm.environment.get(\"TEST_EMAIL\"));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"email\": \"{{TEST_EMAIL}}\",\n  \"password\": \"{{TEST_PASSWORD}}\",\n  \"returnSecureToken\": true\n}"
+				},
+				"url": {
+					"raw": "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key={{FIREBASE_API_KEY}}",
+					"protocol": "https",
+					"host": [
+						"identitytoolkit",
+						"googleapis",
+						"com"
+					],
+					"path": [
+						"v1",
+						"accounts:signUp"
+					],
+					"query": [
+						{
+							"key": "key",
+							"value": "{{FIREBASE_API_KEY}}"
+						}
+					]
+				},
+				"description": "Crea un usuario de Firebase (Email/Password). Guarda idToken/refreshToken/localId en variables."
+			},
+			"response": []
+		},
+		{
+			"name": "Firebase - Sign In (email/password)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Sign In 200\", function () {",
+							"  pm.response.to.have.status(200);",
+							"});",
+							"",
+							"const json = pm.response.json();",
+							"pm.environment.set(\"ID_TOKEN\", json.idToken || \"\");",
+							"pm.environment.set(\"REFRESH_TOKEN\", json.refreshToken || \"\");",
+							"pm.environment.set(\"UID\", json.localId || \"\");",
+							"pm.environment.set(\"EMAIL\", json.email || pm.environment.get(\"TEST_EMAIL\"));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"email\": \"{{TEST_EMAIL}}\",\n  \"password\": \"{{TEST_PASSWORD}}\",\n  \"returnSecureToken\": true\n}"
+				},
+				"url": {
+					"raw": "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={{FIREBASE_API_KEY}}",
+					"protocol": "https",
+					"host": [
+						"identitytoolkit",
+						"googleapis",
+						"com"
+					],
+					"path": [
+						"v1",
+						"accounts:signInWithPassword"
+					],
+					"query": [
+						{
+							"key": "key",
+							"value": "{{FIREBASE_API_KEY}}"
+						}
+					]
+				},
+				"description": "Inicia sesión y obtiene un ID token nuevo. Guarda idToken/refreshToken/localId."
+			},
+			"response": []
+		},
+		{
+			"name": "Gateway -> /auth/me (Bearer {{ID_TOKEN}})",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"/auth/me 200\", function () {",
+							"  pm.response.to.have.status(200);",
+							"});",
+							"const json = pm.response.json();",
+							"pm.environment.set(\"CURRENT_UID\", json.uid || \"\");",
+							"pm.environment.set(\"CURRENT_ROLES\", (json.roles || []).join(\",\"));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{ID_TOKEN}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{GATEWAY_BASE_URL}}/auth/me",
+					"host": [
+						"{{GATEWAY_BASE_URL}}"
+					],
+					"path": [
+						"auth",
+						"me"
+					]
+				},
+				"description": "Devuelve uid, email y roles del usuario autenticado."
+			},
+			"response": []
+		},
+		{
+			"name": "Gateway -> /admin/roles (PUT) (requires ADMIN)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"/admin/roles 200\", function () {",
+							"  pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{ID_TOKEN}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"uid\": \"{{TARGET_UID}}\",\n  \"roles\": [\"ADMIN\", \"SUBASTADOR\"]\n}"
+				},
+				"url": {
+					"raw": "{{GATEWAY_BASE_URL}}/admin/roles?syncClaims=true",
+					"host": [
+						"{{GATEWAY_BASE_URL}}"
+					],
+					"path": [
+						"admin",
+						"roles"
+					],
+					"query": [
+						{
+							"key": "syncClaims",
+							"value": "true"
+						}
+					]
+				},
+				"description": "Asigna roles al UID objetivo. Requiere que el token usado tenga rol ADMIN. Con syncClaims=true, también empuja 'roles' a custom claims en Firebase."
+			},
+			"response": []
+		},
+		{
+			"name": "user init",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJSUzI1NiIsImtpZCI6ImE1YTAwNWU5N2NiMWU0MjczMDBlNTJjZGQ1MGYwYjM2Y2Q4MDYyOWIiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vc3ViYXN0YXNtYXgtYXV0aCIsImF1ZCI6InN1YmFzdGFzbWF4LWF1dGgiLCJhdXRoX3RpbWUiOjE3NjAzMTUzODAsInVzZXJfaWQiOiJpbEdrQkQwV2xoZHZCS2p4VElLNXFkUFlRM3oyIiwic3ViIjoiaWxHa0JEMFdsaGR2QktqeFRJSzVxZFBZUTN6MiIsImlhdCI6MTc2MDMxNTM4MCwiZXhwIjoxNzYwMzE4OTgwLCJlbWFpbCI6InRlc3RlckBleGFtcGxlLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwiZmlyZWJhc2UiOnsiaWRlbnRpdGllcyI6eyJlbWFpbCI6WyJ0ZXN0ZXJAZXhhbXBsZS5jb20iXX0sInNpZ25faW5fcHJvdmlkZXIiOiJwYXNzd29yZCJ9fQ.KbGAPLJVJxC_Q0fTPSvzm9NMKysXIeNfvpsjt_AMIruTVbyKl1h_Dd0PDpdOhYT7sCTGYFRPlpdJsIzxkm1T0nF-aqV_a3NAn7muJ5pzUcDcu2QcP6RgJaM-frfvSlagFiHhIIqlrSkK7KgLR9W7XB0kUT3v0ZnLTB9XVkGfnz36sllev8BhYkk8dYXSvJfx7Qv-4sraDXopsGb9jw0j8P9W04UlIriAKKybrVdb51SX3MMwoTDNyH7XztJMpMhQQs9Fg_U7TOwBaYrtWFEEDyKR3dGK4vI7QaQISP_U4g6VEpFH59z98fNUm5HM8QtLf9SA9f9glHCu2KS1M1ZaXw",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"uid\": \"ilGkBD0WlhdvBKjxTIK5qdPYQ3z2\",\r\n  \"email\": \"{{TEST_EMAIL}}\",\r\n  \"roles\": [\"PARTICIPANTE\"]\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8081/auth/init",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"auth",
+						"init"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Auth:8081",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJSUzI1NiIsImtpZCI6ImE1YTAwNWU5N2NiMWU0MjczMDBlNTJjZGQ1MGYwYjM2Y2Q4MDYyOWIiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vc3ViYXN0YXNtYXgtYXV0aCIsImF1ZCI6InN1YmFzdGFzbWF4LWF1dGgiLCJhdXRoX3RpbWUiOjE3NjAzMTU2MzQsInVzZXJfaWQiOiJpbEdrQkQwV2xoZHZCS2p4VElLNXFkUFlRM3oyIiwic3ViIjoiaWxHa0JEMFdsaGR2QktqeFRJSzVxZFBZUTN6MiIsImlhdCI6MTc2MDMxNTYzNCwiZXhwIjoxNzYwMzE5MjM0LCJlbWFpbCI6InRlc3RlckBleGFtcGxlLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwiZmlyZWJhc2UiOnsiaWRlbnRpdGllcyI6eyJlbWFpbCI6WyJ0ZXN0ZXJAZXhhbXBsZS5jb20iXX0sInNpZ25faW5fcHJvdmlkZXIiOiJwYXNzd29yZCJ9fQ.p7pcuyoZwga3eJBimZzzaoaX7DQXZtv997FvZP7E_w-TVY9z0wdrLckDmZRM9I_0GeQjfLSwsSiau_ArzW_4MBKNTiIGBPg4Fga1n7t_U3ZMTWvb1EUInnTB4LgABYTZlwh3vw0VSc9Ac49WAn1JglCYocNHaH59RomTCVHp449V_Y4USNDcL-KTCRlxeQJFCvH6ZB1Tibhuy7Sj7luXkL_NoQB7Uibu8oE6-vrMgK2Hx8Ck9gA1wbI8RSP0W2FJjHZxFb2TaQ_4WjaadL-LzugIU6_ejf8Yxr8j5Mniq3m_ETqbmTbkjXImbNl8JHiAJ7pJURX-jPMPs30S1jd6Dg",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8081/auth/me",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"auth",
+						"me"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "FIREBASE_API_KEY",
+			"value": "AIzaSyA7___ndFHIspXmJBlgJzf2i_r9d6g8eBk"
+		},
+		{
+			"key": "GATEWAY_BASE_URL",
+			"value": "http://localhost:8080"
+		},
+		{
+			"key": "TEST_EMAIL",
+			"value": "tester@example.com"
+		},
+		{
+			"key": "TEST_PASSWORD",
+			"value": "Password123!"
+		},
+		{
+			"key": "ID_TOKEN",
+			"value": "eyJhbGciOiJSUzI1NiIsImtpZCI6ImE1YTAwNWU5N2NiMWU0MjczMDBlNTJjZGQ1MGYwYjM2Y2Q4MDYyOWIiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vc3ViYXN0YXNtYXgtYXV0aCIsImF1ZCI6InN1YmFzdGFzbWF4LWF1dGgiLCJhdXRoX3RpbWUiOjE3NjAyMzMzMDYsInVzZXJfaWQiOiJwR1BpdlFMWlo3aDlWeE1SUWFwYmdIa0k1c2UyIiwic3ViIjoicEdQaXZRTFpaN2g5VnhNUlFhcGJnSGtJNXNlMiIsImlhdCI6MTc2MDIzMzMwNiwiZXhwIjoxNzYwMjM2OTA2LCJlbWFpbCI6InRlc3RlckBleGFtcGxlLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwiZmlyZWJhc2UiOnsiaWRlbnRpdGllcyI6eyJlbWFpbCI6WyJ0ZXN0ZXJAZXhhbXBsZS5jb20iXX0sInNpZ25faW5fcHJvdmlkZXIiOiJwYXNzd29yZCJ9fQ.JF6tztAR6QlQTXXNeN4XMMcAJ9SJAZFKgS9tmNnMmjDL-c34XPdWxWXRGHNmZX8Sg4kfashyP0Pntw5QRkYleaQg2Bub8eXLs9wV87JxDonjvn5-1ITD-OfwcMR-SdF1eFrEeVAX7XxwgcTJ9nldlm-dvJPKwymMi6tNbukqZvD3ixs0Uo3TD45EkcK6jxOLd9QcVO9WETWqb8SGCm3u5WL39ITRLLTGfF9BltMJv_npS3j5_CnSBWpKxkylmMeRUdX7FFBAnKMkdxnvW0fR31temdPPkyjzBk0_QqQWHdqHM1SiFzjFgwAOvD7Q04Xfcwu4k0TRFVKQyhPm4256Kw"
+		},
+		{
+			"key": "REFRESH_TOKEN",
+			"value": "AMf-vBwGZ14KNxZfMNhC8Zn5BTFMEeukuRkatufg7ta_KmKoyHBnNScXyerOuLl2KNYDqJ7Sa1RbozIVMf_i0RX7ZvzvsFtSLfa6F_IYIX6In3zuuEKvgKZWzGiHdKsVZVcX9HD4G8RvedvROWReuhQ1xGLeZPMNbysWJPkWlJvmoZ4yv3FoGP2YhCykKIaCbzOfrFP3kEhuB5b2aEPoBNv_y-cBSmb-sg"
+		},
+		{
+			"key": "UID",
+			"value": "pGPivQLZZ7h9VxMRQapbgHkI5se2"
+		},
+		{
+			"key": "TARGET_UID",
+			"value": "pGPivQLZZ7h9VxMRQapbgHkI5se2"
+		}
+	]
+}
