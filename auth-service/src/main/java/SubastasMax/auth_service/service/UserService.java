@@ -76,6 +76,7 @@ public class UserService {
      * - displayName (String)
      * - avatarUrl   (String)
      * - phone       (String)
+     * - plan        (String)
      */
     public Map<String, Object> getProfileExtras(String uid) throws Exception {
         var snap = firestore.collection(COL_USERS).document(uid).get().get();
@@ -84,13 +85,16 @@ public class UserService {
             Object dn = snap.get("displayName");
             Object av = snap.get("avatarUrl");
             Object ph = snap.get("phone");
+            Object pl = snap.get("plan");
             if (dn instanceof String) out.put("displayName", dn);
             if (av instanceof String) out.put("avatarUrl", av);
             if (ph instanceof String) out.put("phone", ph);
+            out.put("plan", (pl instanceof String s) ? normalizePlan(s) : DEFAULT_PLAN);
+        } else {
+            out.put("plan", DEFAULT_PLAN);
         }
         return out;
     }
-
     // ===== Escrituras / upserts =====
 
     /** Upsert de roles con merge seguro. */
@@ -107,6 +111,7 @@ public class UserService {
      * - Si existe: hace merge de email (si no estaba), roles (si se envían), displayName (si se envía)
      */
     public void ensureUserDoc(String uid, String email, String displayName, List<String> rolesRaw) throws Exception {
+        ensureUserDoc(uid, email, displayName, rolesRaw, DEFAULT_PLAN);
         List<String> roles = (rolesRaw == null || rolesRaw.isEmpty())
                 ? List.of("PARTICIPANTE")
                 : normalizeAndValidateRoles(rolesRaw);
@@ -125,7 +130,7 @@ public class UserService {
         } else {
             ref.set(data, SetOptions.merge()).get();
         }
-    }
+    }    // Mantén tu método original ensureUserDoc(...) SIN plan para compatibilidad
 
     /** Merge parcial de campos de perfil (no toca roles). Ignora nulls. */
     public void updateUserProfileFields(String uid, String displayName, String avatarUrl, String phone) throws Exception {
@@ -138,4 +143,67 @@ public class UserService {
                     .set(patch, SetOptions.merge()).get();
         }
     }
+
+    private static final String DEFAULT_PLAN = "FREE";
+
+    private String normalizePlan(String raw) {
+        if (raw == null) return DEFAULT_PLAN;
+        String p = raw.trim().toUpperCase();
+        return (p.equals("FREE") || p.equals("PROFESSIONAL")) ? p : DEFAULT_PLAN;
+    }
+
+    /** Lee 'plan' desde users/{uid}; default FREE si no existe. */
+    public String getPlan(String uid) throws Exception {
+        var snap = firestore.collection(COL_USERS).document(uid).get().get();
+        Object p = snap.get("plan");
+        return (p instanceof String s) ? normalizePlan(s) : DEFAULT_PLAN;
+    }
+
+    /** Setea/mergea el plan en Firestore. */
+    public void setPlan(String uid, String planRaw) throws Exception {
+        String plan = normalizePlan(planRaw);
+        firestore.collection(COL_USERS).document(uid)
+                .set(Map.of("plan", plan), SetOptions.merge()).get();
+
+        // Actualiza custom claims preservando las existentes
+        var ur = FirebaseAuth.getInstance().getUser(uid);
+        Map<String, Object> claims = new HashMap<>();
+        if (ur.getCustomClaims() != null) claims.putAll(ur.getCustomClaims());
+        claims.put("plan", plan);
+        FirebaseAuth.getInstance().setCustomUserClaims(uid, claims);
+    }
+
+    /** Overload: ensureUserDoc con plan explícito. */
+    public void ensureUserDoc(String uid, String email, String displayName, List<String> rolesRaw, String planRaw) throws Exception {
+        List<String> roles = (rolesRaw == null || rolesRaw.isEmpty())
+                ? List.of("PARTICIPANTE")
+                : normalizeAndValidateRoles(rolesRaw);
+        String plan = normalizePlan(planRaw);
+
+        DocumentReference ref = firestore.collection(COL_USERS).document(uid);
+        DocumentSnapshot snap = ref.get().get();
+
+        Map<String, Object> data = new HashMap<>();
+        if (email != null && !email.isBlank()) data.put("email", email);
+        if (displayName != null && !displayName.isBlank()) data.put("displayName", displayName);
+        data.put("roles", roles);
+        data.put("plan", plan);
+
+        if (!snap.exists()) {
+            data.put("createdAt", com.google.cloud.Timestamp.now());
+            ref.set(data).get();
+        } else {
+            ref.set(data, SetOptions.merge()).get();
+        }
+
+        // claims (preservando existentes)
+        var ur = FirebaseAuth.getInstance().getUser(uid);
+        Map<String, Object> claims = new HashMap<>();
+        if (ur.getCustomClaims() != null) claims.putAll(ur.getCustomClaims());
+        claims.put("roles", roles);
+        claims.put("plan", plan);
+        FirebaseAuth.getInstance().setCustomUserClaims(uid, claims);
+    }
+
+
 }

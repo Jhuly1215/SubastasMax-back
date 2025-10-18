@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+// auth-service/src/main/java/SubastasMax/auth_service/controller/AuthInitController.java
 @RestController
 @RequestMapping("/auth")
 public class AuthInitController {
@@ -20,34 +21,44 @@ public class AuthInitController {
         this.userService = userService;
     }
 
-    /** Llamar tras el primer login del cliente; crea/mergea el doc con el rol elegido */
     @PostMapping("/init")
     public Map<String, Object> init(Authentication authentication,
                                     @RequestBody(required = false) AuthInitRequest body) throws Exception {
         String uid = (String) authentication.getPrincipal();
-
-        // Lee email de Firebase para persistirlo
         String email = userService.getEmail(uid);
 
-        // Determinar rol elegido (solo público: PARTICIPANTE o SUBASTADOR)
-        // en AuthInitController.init(...)
-        String raw = null;
+        // Rol preferido (sólo PARTICIPANTE | SUBASTADOR)
+        String rawRole = null;
         if (body != null) {
             if (body.preferredRole() != null && !body.preferredRole().isBlank()) {
-                raw = body.preferredRole();
-            } else if (body.role() != null && !body.role().isBlank()) { // <-- alias
-                raw = body.role();
+                rawRole = body.preferredRole();
+            } else if (body.role() != null && !body.role().isBlank()) {
+                rawRole = body.role();
             }
         }
-        String preferred = (raw == null ? "PARTICIPANTE" : raw.trim().toUpperCase());
+        String preferred = (rawRole == null ? "PARTICIPANTE" : rawRole.trim().toUpperCase());
         if (!preferred.equals("PARTICIPANTE") && !preferred.equals("SUBASTADOR")) {
-        preferred = "PARTICIPANTE"; // no permitir ADMIN desde cliente
+            preferred = "PARTICIPANTE";
         }
-        userService.ensureUserDoc(uid, email, body != null ? body.displayName() : null, List.of(preferred));
 
+        // Plan ("FREE" | "PROFESSIONAL"), default FREE
+        String plan = "FREE";
+        if (body != null && body.plan() != null && !body.plan().isBlank()) {
+            String p = body.plan().trim().toUpperCase();
+            plan = (p.equals("FREE") || p.equals("PROFESSIONAL")) ? p : "FREE";
+        }
 
-        // Devuelve estado actual
+        // Upsert user + claims (roles + plan)
+        userService.ensureUserDoc(uid, email, body != null ? body.displayName() : null, java.util.List.of(preferred), plan);
+
         var roles = userService.getRoles(uid);
-        return Map.of("uid", uid, "email", email, "roles", roles);
+        var finalPlan = userService.getPlan(uid);
+
+        return Map.of(
+            "uid", uid,
+            "email", email,
+            "roles", roles,
+            "plan", finalPlan
+        );
     }
 }
