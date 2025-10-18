@@ -22,11 +22,11 @@ spring:
         - id: auctions
           uri: lb://auction-service
           predicates:
-            - Path=/auction/**
+            - Path=/api/auctions/**
         - id: wallets
           uri: lb://wallet-service
           predicates:
-            - Path=/wallet/**
+            - Path=/api/wallets/**
 
 eureka:
   client:
