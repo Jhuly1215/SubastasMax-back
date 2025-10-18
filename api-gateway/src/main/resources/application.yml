@@ -19,6 +19,14 @@ spring:
           uri: http://bidding-service:8090
           predicates:
             - Path=/bidding-ws/**
+        - id: auctions
+          uri: lb://auction-service
+          predicates:
+            - Path=/auction/**
+        - id: wallets
+          uri: lb://wallet-service
+          predicates:
+            - Path=/wallet/**
       globalcors:
         add-to-simple-url-handler-mapping: true
         corsConfigurations:
