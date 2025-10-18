@@ -32,7 +32,7 @@ SecurityFilterChain chain(HttpSecurity http, FirebaseAuthMvcFilter f, HandlerMap
         .requestMatchers(mvc.pattern("/test/**")).permitAll()
         .requestMatchers(mvc.pattern("/public/**")).permitAll()
         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-        .anyRequest().permitAll()
+        .anyRequest().authenticated()
     )
         .anonymous(anon -> {})  
         .exceptionHandling(h -> h.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
