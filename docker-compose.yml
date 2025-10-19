@@ -184,7 +184,7 @@ services:
     build: ./chat-service
     container_name: chat-service
     ports:
-      - "8090:8090"
+      - "8070:8070"
     environment:
       - CONFIG_SERVER_URL=${CONFIG_SERVER_URL}
       - EUREKA_DEFAULT_ZONE=${EUREKA_DEFAULT_ZONE}

@@ -19,6 +19,43 @@ spring:
           uri: http://bidding-service:8090
           predicates:
             - Path=/bidding-ws/**
+        - id: auctions
+          uri: lb://auction-service
+          predicates:
+            - Path=/api/auctions/**
+        - id: wallets
+          uri: lb://wallet-service
+          predicates:
+            - Path=/api/wallets/**
+        - id: chat-ws
+          uri: http://chat-service:8070
+          predicates:
+          - Path=/chat-ws/**
+
+
+      globalcors:
+        add-to-simple-url-handler-mapping: true
+        corsConfigurations:
+          '[/]':
+            allowedOrigins:
+              - http://localhost:3000
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - PATCH
+              - OPTIONS
+            allowedHeaders:
+              - Authorization
+              - Content-Type
+              - X-Requested-With
+              - Accept
+              - Origin
+            exposedHeaders:
+              - "*"
+            allowCredentials: false
+            maxAge: 3600
 
 eureka:
   client:
@@ -29,4 +66,4 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info
