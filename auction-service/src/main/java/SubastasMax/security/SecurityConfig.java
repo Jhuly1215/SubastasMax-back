@@ -11,7 +11,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
-import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
 import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
 @Configuration
@@ -19,7 +18,7 @@ import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 public class SecurityConfig {
 
   @Bean
-SecurityFilterChain chain(HttpSecurity http, FirebaseAuthMvcFilter f, HandlerMappingIntrospector introspector) throws Exception {
+SecurityFilterChain chain(HttpSecurity http, FirebaseAuthMvcFilter firebaseAuthMvcFilter, HandlerMappingIntrospector introspector) throws Exception {
     http.csrf(csrf -> csrf.disable());
 
     http.sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
@@ -33,11 +32,11 @@ SecurityFilterChain chain(HttpSecurity http, FirebaseAuthMvcFilter f, HandlerMap
         .requestMatchers(mvc.pattern("/test/**")).permitAll()
         .requestMatchers(mvc.pattern("/public/**")).permitAll()
         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-        .anyRequest().permitAll()
+        .anyRequest().authenticated()
     )
-        .anonymous(anon -> {})  
-        .exceptionHandling(h -> h.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
-        .addFilterBefore(f, UsernamePasswordAuthenticationFilter.class);
+    .httpBasic(basic -> basic.disable())  // Deshabilita autenticación básica
+    .formLogin(form -> form.disable())     // Deshabilita login por formulario
+    .addFilterBefore(firebaseAuthMvcFilter, UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
   }

@@ -17,8 +17,8 @@ import java.util.stream.Collectors;
 public class UserAdminService {
 
     private final Firestore firestore;
-    private final UserService userService;   // ya lo tienes (lee/escribe roles, getEmail, etc.)
-    private final RoleService roleService;   // ya lo tienes (push a custom claims)
+    private final UserService userService;   // lee/escribe roles, email, perfil
+    private final RoleService roleService;   // sincroniza roles a custom claims
 
     public UserAdminService(
             @Value("${app.firebase.project-id}") String projectId,
@@ -42,7 +42,6 @@ public class UserAdminService {
                 .distinct()
                 .collect(Collectors.toList());
 
-        // valida contra enum
         for (String r : norm) {
             try { Role.valueOf(r); }
             catch (IllegalArgumentException e) {
@@ -53,15 +52,21 @@ public class UserAdminService {
         return norm;
     }
 
-    private UserResponse toResponse(UserRecord ur, List<String> roles) {
+    private UserResponse toResponse(UserRecord ur, List<String> roles) throws Exception {
+        Map<String, Object> extras = userService.getProfileExtras(ur.getUid());
+        String plan = (String) extras.getOrDefault("plan", "FREE");
         return new UserResponse(
                 ur.getUid(),
                 ur.getEmail(),
                 ur.getDisplayName(),
                 ur.isDisabled(),
-                roles == null ? List.of() : roles
+                roles == null ? java.util.List.of() : roles,
+                (String) extras.get("avatarUrl"),
+                (String) extras.get("phone"),
+                plan
         );
     }
+    
 
     // ===== CRUD =====
 
@@ -76,9 +81,26 @@ public class UserAdminService {
 
         UserRecord created = FirebaseAuth.getInstance().createUser(createReq);
 
+        // Roles -> Firestore
         List<String> roles = normalizeAndValidateRoles(req.roles());
-        // Persistir roles en Firestore
         userService.setRoles(created.getUid(), roles);
+
+        // Doc base -> Firestore (usa la firma que ya tienes)
+        userService.ensureUserDoc(
+                created.getUid(),
+                created.getEmail(),
+                req.displayName(),
+                roles
+        );
+
+        // Extras de perfil -> Firestore (merge)
+        // (Estos métodos ya existen en tu UserService según lo que venías usando)
+        userService.updateUserProfileFields(
+                created.getUid(),
+                req.displayName(),
+                req.avatarUrl(),   // requiere que CreateUserRequest tenga avatarUrl()
+                req.phone()        // y phone()
+        );
 
         if (syncClaims) {
             roleService.pushRolesToCustomClaims(created.getUid(), roles);
@@ -95,17 +117,22 @@ public class UserAdminService {
 
     public List<UserResponse> listUsers(int maxResults, String pageTokenOpt) throws Exception {
         List<UserResponse> out = new ArrayList<>();
-        ListUsersPage page;
-        if (pageTokenOpt != null && !pageTokenOpt.isBlank()) {
-            // Firebase Admin SDK no lista por token arbitrario directamente desde el SDK.
-            // Se hace secuencial. Para simplificar demo: primera página.
-            page = FirebaseAuth.getInstance().listUsers(null);
-        } else {
-            page = FirebaseAuth.getInstance().listUsers(null);
-        }
+        // Por simplicidad, primera página (el Admin SDK no acepta un pageToken arbitrario directamente).
+        ListUsersPage page = FirebaseAuth.getInstance().listUsers(null);
+
         for (ExportedUserRecord user : page.getValues()) {
             List<String> roles = userService.getRoles(user.getUid());
-            out.add(new UserResponse(user.getUid(), user.getEmail(), user.getDisplayName(), user.isDisabled(), roles));
+            Map<String, Object> extras = userService.getProfileExtras(user.getUid());
+            out.add(new UserResponse(
+                    user.getUid(),
+                    user.getEmail(),
+                    user.getDisplayName(),
+                    user.isDisabled(),
+                    roles == null ? List.of() : roles,
+                    (String) extras.get("avatarUrl"),
+                    (String) extras.get("phone"),
+                    (String) extras.getOrDefault("plan", "FREE")
+            ));
             if (out.size() >= maxResults) break;
         }
         return out;
@@ -117,13 +144,20 @@ public class UserAdminService {
         if (req.email() != null) upd.setEmail(req.email());
         if (req.password() != null) upd.setPassword(req.password());
         if (req.displayName() != null) upd.setDisplayName(req.displayName());
-        if (req.disabled() != null) {
-            if (req.disabled()) upd.setDisabled(true); else upd.setDisabled(false);
-        }
+        if (req.disabled() != null) upd.setDisabled(req.disabled());
 
         UserRecord ur = FirebaseAuth.getInstance().updateUser(upd);
 
-        List<String> roles = null;
+        // Extras perfil -> Firestore (merge)
+        userService.updateUserProfileFields(
+                uid,
+                req.displayName(),
+                req.avatarUrl(),
+                req.phone()
+        );
+
+        // Roles
+        List<String> roles;
         if (req.roles() != null) {
             roles = normalizeAndValidateRoles(req.roles());
             userService.setRoles(uid, roles);
@@ -137,7 +171,6 @@ public class UserAdminService {
 
     public void deleteUser(String uid) throws Exception {
         FirebaseAuth.getInstance().deleteUser(uid);
-        // Borra doc de roles para mantener limpio
         try {
             firestore.collection("users").document(uid).delete().get();
         } catch (InterruptedException | ExecutionException ignored) {}

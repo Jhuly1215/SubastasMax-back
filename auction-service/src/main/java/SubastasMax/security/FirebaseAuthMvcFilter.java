@@ -1,54 +1,60 @@
 package SubastasMax.security;
 
-import java.io.IOException;
-import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-
-import com.google.firebase.auth.FirebaseAuth;
-
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 @Component
 public class FirebaseAuthMvcFilter extends OncePerRequestFilter {
-    private static final Logger logger = LoggerFactory.getLogger(FirebaseAuthMvcFilter.class);
 
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        String path = request.getRequestURI();
-        return path.startsWith("/test") || path.startsWith("/actuator");
+    private final AuthServiceClient authClient;
+
+    public FirebaseAuthMvcFilter(AuthServiceClient authClient) {
+        this.authClient = authClient;
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
             throws ServletException, IOException {
 
-        String h = req.getHeader(HttpHeaders.AUTHORIZATION);
-        logger.debug("Request {} {} Authorization header present? {}", req.getMethod(), req.getRequestURI(), (h != null));
+        String header = req.getHeader(HttpHeaders.AUTHORIZATION);
+        
+        if (header != null && header.startsWith("Bearer ")) {
+            String token = header.substring(7);
 
-        if (h != null && h.startsWith("Bearer ")) {
             try {
-                var t = FirebaseAuth.getInstance().verifyIdToken(h.substring(7));
-                var auth = new UsernamePasswordAuthenticationToken(
-                        t.getUid(), t, List.of(new SimpleGrantedAuthority("ROLE_USER")));
-                SecurityContextHolder.getContext().setAuthentication(auth);
-                logger.debug("Token OK, uid={}", t.getUid());
+                Map<String, Object> userInfo = authClient.verifyToken(token);
+                
+                if (userInfo != null && userInfo.get("uid") != null) {
+                    String uid = (String) userInfo.get("uid");
+                    UsernamePasswordAuthenticationToken auth =
+                            new UsernamePasswordAuthenticationToken(
+                                    uid, 
+                                    token,
+                                    List.of(new SimpleGrantedAuthority("ROLE_USER"))
+                            );
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                } else {
+                    res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token inválido o expirado");
+                    return;
+                }
             } catch (Exception e) {
-                logger.warn("Token not valid", e);
+                res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Error validando token: " + e.getMessage());
+                return;
             }
         }
+        // Si no hay Authorization header, Spring Security se encargará de rechazarlo en anyRequest().authenticated()
 
         chain.doFilter(req, res);
     }
 }
-
