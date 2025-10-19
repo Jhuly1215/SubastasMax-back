@@ -1,0 +1,93 @@
+# Root .gitignore para el repo monorepo (unifica reglas comunes)
+
+# --- Secrets (NO subir nunca) ---
+/secrets/*.json
+subastasmax-auth.json
+src/main/resources/*-service-key.json
+
+# --- Maven / target ---
+/target/
+/**/target/
+/.mvn/
+.mvn/wrapper/maven-wrapper.jar
+
+# Evitar ignorar targets de submodules dentro de src (conservamos excepciones clásicas)
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# --- IDEs / editors ---
+# STS / Eclipse
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# VSCode
+.vscode/
+
+# --- Build folders (gradle etc) ---
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# --- Misc ---
+HELP.md
+.DS_Store
+
+# Local docker artifacts (optional)
+/docker-compose.override.yml
+
+# Additional from other services
+subastasmax-auth.json
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+### fireBase ###
+src/main/resources/auction-service-key.json

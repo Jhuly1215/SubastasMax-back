@@ -1,0 +1,54 @@
+spring:
+  application:
+    name: notification-service
+  config:
+    # Usa el Config Server si está; si no, sigue (no falla)
+    import: 'optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}'
+
+eureka:
+  client:
+    serviceUrl:
+      # En local usa localhost; en docker puedes sobreescribir por ENV
+      defaultZone: ${EUREKA_DEFAULT_ZONE:http://localhost:8761/eureka}
+
+# Auth (OpenID Connect / Introspection) - opcional, configure en .env si lo usas
+auth:
+  jwk-set-uri: ${AUTH_JWKS_URI:}
+  introspection:
+    url: ${AUTH_INTROSPECTION_URL:}
+    client-id: ${AUTH_INTROSPECTION_CLIENT_ID:}
+    client-secret: ${AUTH_INTROSPECTION_CLIENT_SECRET:}
+
+# Kafka: toma valor desde la variable de entorno KAFKA_BOOTSTRAP (definida en .env)
+kafka:
+  bootstrap-servers: ${KAFKA_BOOTSTRAP:kafka:9092}
+  group-id: ${KAFKA_GROUP_ID:notification-service-group}
+  topic:
+    auction: ${KAFKA_TOPIC_AUCTION:auction.events}
+    wallet: ${KAFKA_TOPIC_WALLET:wallet.events}
+    bid: ${KAFKA_TOPIC_BID:bid.events}
+
+# URLs de otros servicios (Feign clients)
+services:
+  wallet:
+    url: ${SERVICES_WALLET_URL:http://wallet-service:8085}
+  auction:
+    url: ${SERVICES_AUCTION_URL:http://auction-service:8081}
+
+# Firebase (auth y DB)
+firebase:
+  database:
+    url: ${FIREBASE_DATABASE_URL:https://notification-service.firebaseio.com}
+  config:
+    path: ${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER:/secrets/notification-service-key.json}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+management.endpoints.web.exposure.include: health,info

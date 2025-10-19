@@ -96,7 +96,6 @@ services:
         condition: service_healthy
     restart: on-failure
 
-
   auction-service:
     build: ./auction-service
     container_name: auction-service
@@ -179,6 +178,36 @@ services:
         condition: service_healthy
       auth-service:
         condition: service_started
+    restart: on-failure
+
+  notification-service:
+    build: ./notification-service
+    container_name: notification-service
+    ports:
+      - "${NOTIFICATION_SERVICE_PORT}:8060"
+    environment:
+      - CONFIG_SERVER_URL=${CONFIG_SERVER_URL}
+      - EUREKA_DEFAULT_ZONE=${EUREKA_DEFAULT_ZONE}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER}
+      - KAFKA_BOOTSTRAP=${KAFKA_BOOTSTRAP}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - SERVICES_WALLET_URL=${SERVICES_WALLET_URL}
+      - SERVICES_AUCTION_URL=${SERVICES_AUCTION_URL}
+      - FIREBASE_DATABASE_URL=${FIREBASE_DATABASE_URL}
+    volumes:
+      - ${FIREBASE_SECRETS_HOST_PATH}:${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER}:ro
+    networks:
+      - subastas-network
+    depends_on:
+      config-server:
+        condition: service_healthy
+      discovery-service:
+        condition: service_healthy
     restart: on-failure
 
 networks:
