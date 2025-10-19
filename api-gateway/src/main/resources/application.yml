@@ -22,7 +22,7 @@ spring:
         - id: auctions
           uri: lb://auction-service
           predicates:
-            - Path=/auction/**
+            - Path=/api/auctions/**
         - id: wallets
           uri: lb://wallet-service
           predicates:
@@ -54,7 +54,7 @@ spring:
               - X-Requested-With
               - Accept
               - Origin
-            exposeHeaders:
+            exposedHeaders:
               - "*"
             allowCredentials: false
             maxAge: 3600
