@@ -60,10 +60,6 @@ services:
       - "8081:8081"
     env_file:
       - ./auth-service/.env
-    ports:
-      - "8081:8081"
-    env_file:
-      - ./auth-service/.env
     environment:
       - CONFIG_SERVER_URL=${CONFIG_SERVER_URL}
       - EUREKA_DEFAULT_ZONE=${EUREKA_DEFAULT_ZONE}
@@ -108,8 +104,6 @@ services:
   bidding-service:
     build: ./bidding-service
     container_name: bidding-service
-    ports:
-      - "8090:8090"
     ports:
       - "8090:8090"
     environment:

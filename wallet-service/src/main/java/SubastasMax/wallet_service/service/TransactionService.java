@@ -18,7 +18,7 @@ public class TransactionService {
 
     public String createTransaction(TransactionCreateDTO dto) throws ExecutionException, InterruptedException {
         Transaction transaction = Transaction.builder()
-            .fromUserId(dto.getFromUserId())
+            .fromUserId(dto.fromUserId())
             .toUserId(dto.getToUserId())
             .amount(dto.getAmount())
             .currency(dto.getCurrency())
