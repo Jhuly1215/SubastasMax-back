@@ -2,8 +2,10 @@ package SubastasMax.wallet_service.service;
 
 import SubastasMax.wallet_service.dto.BalanceDTO;
 import SubastasMax.wallet_service.dto.TransactionCreateDTO;
+import SubastasMax.wallet_service.dto.TransactionMetadataDTO;
 import SubastasMax.wallet_service.model.Transaction;
 import SubastasMax.wallet_service.repository.TransactionRepository;
+import SubastasMax.wallet_service.util.RequestIdUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +19,11 @@ public class TransactionService {
     private TransactionRepository transactionRepository;
 
     public String createTransaction(TransactionCreateDTO dto) throws ExecutionException, InterruptedException {
+        // Genera requestId si no viene en el DTO
+        String requestId = (dto.getRequestId() != null && !dto.getRequestId().isEmpty())
+            ? dto.getRequestId()
+            : RequestIdUtil.generateRequestId(dto.getFromUserId());
+        
         Transaction transaction = Transaction.builder()
             .fromUserId(dto.getFromUserId())
             .toUserId(dto.getToUserId())
@@ -25,7 +32,7 @@ public class TransactionService {
             .type(dto.getType())
             .status("PENDING")
             .description(dto.getDescription())
-            .requestId(dto.getRequestId())
+            .requestId(requestId)
             .balanceBefore(mapToBalance(dto.getBalanceBefore()))
             .balanceAfter(mapToBalance(dto.getBalanceAfter()))
             .metadata(mapToMetadata(dto.getMetadata()))
@@ -63,9 +70,18 @@ public class TransactionService {
             .build();
     }
 
-    private Transaction.TransactionMetadata mapToMetadata(Object dto) {
+    private Transaction.TransactionMetadata mapToMetadata(TransactionMetadataDTO dto) {
         if (dto == null) return null;
-        // Implementa la conversión según tu TransactionMetadataDTO
-        return null;
+        return Transaction.TransactionMetadata.builder()
+            .auctionId(dto.getAuctionId())
+            .bidId(dto.getBidId())
+            .bankAccount(dto.getBankAccount())
+            .paymentMethod(dto.getPaymentMethod())
+            .externalTransactionId(dto.getExternalTransactionId())
+            .fromCurrency(dto.getFromCurrency())
+            .toCurrency(dto.getToCurrency())
+            .exchangeRate(dto.getExchangeRate())
+            .convertedAmount(dto.getConvertedAmount())
+            .build();
     }
 }
