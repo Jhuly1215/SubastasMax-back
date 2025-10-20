@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: chat-service
+  cloud:
+    config:
+      enabled: false
+      import-check:
+        enabled: false
+
+server:
+  port: 8070
+
+eureka:
+  client:
+    enabled: false
+
+logging:
+  level:
+    root: INFO
