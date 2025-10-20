@@ -27,7 +27,6 @@ spring:
           uri: lb://wallet-service
           predicates:
             - Path=/api/wallets/**
-<<<<<<< HEAD
         - id: transactions
           uri: lb://wallet-service
           predicates:
@@ -36,8 +35,6 @@ spring:
           uri: http://chat-service:8070
           predicates:
           - Path=/chat-ws/**
-=======
->>>>>>> d77b3be4f769e54ed1136433c29b40ce10193d5a
 
 
       globalcors:
@@ -73,4 +70,4 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info
