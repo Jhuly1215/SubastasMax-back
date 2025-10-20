@@ -291,6 +291,7 @@ public class AuctionService {
         // 3️⃣ Actualizar campos de la subasta
         auction.setWinningBid(highestBid);
         auction.setWinnerId(winnerId);
+        auction.setCurrentPrice(highestBid); 
         auction.setStatus("closed");
         auction.setSettledAt(Timestamp.now());
 
@@ -298,6 +299,7 @@ public class AuctionService {
         Map<String, Object> updates = new HashMap<>();
         updates.put("winningBid", auction.getWinningBid());
         updates.put("winnerId", auction.getWinnerId());
+        updates.put("currentPrice", auction.getCurrentPrice());
         updates.put("status", auction.getStatus());
         updates.put("settledAt", auction.getSettledAt());
 
