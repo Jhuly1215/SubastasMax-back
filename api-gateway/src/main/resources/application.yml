@@ -27,7 +27,7 @@ spring:
           uri: lb://wallet-service
           predicates:
             - Path=/api/wallets/**
-        - id: transactions
+        - id: wallet-transactions 
           uri: lb://wallet-service
           predicates:
             - Path=/api/transactions/**
