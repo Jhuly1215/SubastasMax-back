@@ -15,7 +15,8 @@ import java.util.Map;
 public class Transaction {
     
     private String transactionId;
-    private String userId;
+    private String fromUserId;
+    private String toUserId;
     private String amount;
     private String currency;
     private String type;

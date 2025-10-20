@@ -20,4 +20,3 @@ public class RoleService {
         // Nota: el usuario debe refrescar su ID token para ver los claims nuevos.
     }
 }
-
