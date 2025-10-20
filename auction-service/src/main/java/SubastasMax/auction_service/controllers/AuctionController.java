@@ -21,9 +21,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Slf4j
 public class AuctionController {
-    
     private final AuctionService auctionService;
-    
     /**
      * Crear una nueva subasta
      * POST /api/auctions
