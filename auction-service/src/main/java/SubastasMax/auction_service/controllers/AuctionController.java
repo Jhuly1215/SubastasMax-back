@@ -3,6 +3,7 @@ package SubastasMax.auction_service.controllers;
 import SubastasMax.auction_service.dto.AuctionResponse;
 import SubastasMax.auction_service.dto.CreateAuctionRequest;
 import SubastasMax.auction_service.dto.UpdateAuctionRequest;
+import SubastasMax.auction_service.model.Auction_model;
 import SubastasMax.auction_service.service.AuctionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,11 +21,8 @@ import java.util.Map;
 @RequestMapping("/api/auctions")
 @RequiredArgsConstructor
 @Slf4j
-@CrossOrigin(origins = "*")
 public class AuctionController {
-    
     private final AuctionService auctionService;
-    
     /**
      * Crear una nueva subasta
      * POST /api/auctions
@@ -36,7 +34,7 @@ public class AuctionController {
         
         try {
             /*String userId = authentication.getName();*/
-            String userId = "test-userid"; // Temporal hasta integrar seguridad
+            String userId = authentication.getName();
             AuctionResponse response = auctionService.createAuction(request, userId);
             
             Map<String, Object> result = new HashMap<>();
@@ -69,8 +67,8 @@ public class AuctionController {
             /*String userId = authentication.getName();
             String userRole = getUserRole(authentication);*/
 
-            String userId = "test-userid";
-            String userRole = "test";
+            String userId = authentication.getName();
+            String userRole = getUserRole(authentication);
             
             AuctionResponse response = auctionService.updateAuction(auctionId, request, userId, userRole);
             
@@ -191,7 +189,7 @@ public class AuctionController {
     public ResponseEntity<Map<String, Object>> getMyAuctions(Authentication authentication) {
         try {
             /*String userId = authentication.getName();*/
-            String userId = "test-userid";
+            String userId = authentication.getName();
             List<AuctionResponse> auctions = auctionService.getAuctionsByUser(userId);
             
             Map<String, Object> result = new HashMap<>();
@@ -220,11 +218,9 @@ public class AuctionController {
             Authentication authentication) {
         
         try {
-            /*String userId = authentication.getName();
-            String userRole = getUserRole(authentication);*/
             
-            String userId = "test-userid";
-            String userRole = "test";
+            String userId = authentication.getName();
+            String userRole = getUserRole(authentication);
             
             auctionService.deleteAuction(auctionId, userId, userRole);
             
@@ -273,5 +269,26 @@ public class AuctionController {
                 .orElse("participante");*/ 
                 
                 "user"; // Temporal hasta integrar seguridad
+    }
+
+    @PostMapping("/{auctionId}/close")
+    public ResponseEntity<Map<String, Object>> closeAuction(@PathVariable String auctionId) {
+        try {
+            Auction_model closedAuction = auctionService.closeAuction(auctionId);
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("success", true);
+            result.put("message", "Auction closed successfully");
+            result.put("data", closedAuction);
+
+            return ResponseEntity.ok(result);
+
+        } catch (Exception e) {
+            log.error("Error closing auction", e);
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
     }
 }

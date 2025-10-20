@@ -1,6 +1,7 @@
 package SubastasMax.bidding_service.controller;
 
 import SubastasMax.bidding_service.model.Bid;
+import SubastasMax.bidding_service.service.BidService;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
@@ -8,13 +9,24 @@ import org.springframework.stereotype.Controller;
 @Controller
 public class BiddingController {
 
-    @MessageMapping("/bid")           // Cliente envía a /app/bid
-    @SendTo("/topic/auction")         // Se envía a todos los suscritos
-    public Bid placeBid(Bid bid) {
-        System.out.println("Nuevo bid en subasta " + bid.getAuctionId() +
-                           " por usuario " + bid.getUserId() +
-                           " monto: " + bid.getAmount());
-        // Aquí podrías guardar en BD o validar la lógica de subasta
-        return bid;
+    private final BidService bidService;
+
+    public BiddingController(BidService bidService) {
+        this.bidService = bidService;
     }
+
+    @MessageMapping("/bid")
+    @SendTo("/topic/auction")
+    public Bid placeBid(Bid bid) {
+        try {
+            Bid savedBid = bidService.saveBid(bid);
+            System.out.println("📤 Bid guardado en Firestore: " + savedBid.getAmount());
+            return savedBid;
+        } catch (Exception e) {
+            System.err.println("❌ Error guardando bid: " + e.getMessage());
+            e.printStackTrace();
+            return bid;
+        }
+    }
+    
 }

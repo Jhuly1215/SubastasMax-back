@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### fireBase ###
+src/main/resources/firebase/bidding-service-firebase.json

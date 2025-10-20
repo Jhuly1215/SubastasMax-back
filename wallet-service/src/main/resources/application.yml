@@ -4,6 +4,10 @@ spring:
   config:
     # Usa el Config Server si está; si no, sigue (no falla)
     import: 'optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}'
+
+auth:
+  service:
+    url: http://localhost:8080
   
 
 eureka:
@@ -17,6 +21,16 @@ firebase:
     url: https://wallet-service-7ce34.firebaseio.com
   config:
     path: classpath:firebase-service-account.json
+
+logging:
+  level:
+    root: INFO
+    com.google: DEBUG
+    com.google.api.gax: DEBUG
+    io.grpc: DEBUG
+    SubastasMax: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
 
 management:
   endpoints:
