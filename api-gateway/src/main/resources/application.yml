@@ -27,10 +27,6 @@ spring:
           uri: lb://wallet-service
           predicates:
             - Path=/api/wallets/**
-        - id: chat-ws
-          uri: http://chat-service:8070
-          predicates:
-          - Path=/chat-ws/**
 
 
       globalcors:
