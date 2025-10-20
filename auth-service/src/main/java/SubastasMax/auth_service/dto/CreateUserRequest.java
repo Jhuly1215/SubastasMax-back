@@ -15,4 +15,3 @@ public record CreateUserRequest(
     String phone,
     String plan
 ) {}
-

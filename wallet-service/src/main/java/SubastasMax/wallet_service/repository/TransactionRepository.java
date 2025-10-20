@@ -17,16 +17,10 @@ public class TransactionRepository {
     @Autowired
     private Firestore firestore;
 
-    private static final String COLLECTION_WALLETS = "transactions";
-    private static final String SUBCOLLECTION_TX = "tx";
+    private static final String COLLECTION_TRANSACTIONS = "transactions";
 
     public String createTransaction(Transaction transaction) throws ExecutionException, InterruptedException {
-        String userId = transaction.getUserId();
-        DocumentReference docRef = firestore
-            .collection(COLLECTION_WALLETS)
-            .document(userId)
-            .collection(SUBCOLLECTION_TX)
-            .document();
+        DocumentReference docRef = firestore.collection(COLLECTION_TRANSACTIONS).document();
         
         transaction.setTransactionId(docRef.getId());
         transaction.setCreatedAt(new Date());
@@ -38,12 +32,8 @@ public class TransactionRepository {
         return docRef.getId();
     }
 
-    public Transaction getTransaction(String userId, String transactionId) throws ExecutionException, InterruptedException {
-        DocumentReference docRef = firestore
-            .collection(COLLECTION_WALLETS)
-            .document(userId)
-            .collection(SUBCOLLECTION_TX)
-            .document(transactionId);
+    public Transaction getTransaction(String transactionId) throws ExecutionException, InterruptedException {
+        DocumentReference docRef = firestore.collection(COLLECTION_TRANSACTIONS).document(transactionId);
         
         ApiFuture<DocumentSnapshot> future = docRef.get();
         DocumentSnapshot document = future.get();
@@ -55,31 +45,70 @@ public class TransactionRepository {
         return mapToTransaction(document);
     }
 
-    public void updateTransaction(String userId, String transactionId, Map<String, Object> updates) throws ExecutionException, InterruptedException {
-        DocumentReference docRef = firestore
-            .collection(COLLECTION_WALLETS)
-            .document(userId)
-            .collection(SUBCOLLECTION_TX)
-            .document(transactionId);
+    public void updateTransaction(String transactionId, Map<String, Object> updates) throws ExecutionException, InterruptedException {
+        DocumentReference docRef = firestore.collection(COLLECTION_TRANSACTIONS).document(transactionId);
         
         ApiFuture<WriteResult> result = docRef.update(updates);
         result.get();
     }
 
     public java.util.List<Transaction> getAllTransactionsByUser(String userId) throws ExecutionException, InterruptedException {
-        CollectionReference txCollection = firestore
-            .collection(COLLECTION_WALLETS)
-            .document(userId)
-            .collection(SUBCOLLECTION_TX);
+        CollectionReference txCollection = firestore.collection(COLLECTION_TRANSACTIONS);
         
-        ApiFuture<QuerySnapshot> future = txCollection.orderBy("createdAt", Query.Direction.DESCENDING).get();
+        ApiFuture<QuerySnapshot> future = txCollection
+            .whereIn("toUserId", java.util.Arrays.asList(userId))
+            .orderBy("createdAt", Query.Direction.DESCENDING)
+            .get();
+        
         QuerySnapshot querySnapshot = future.get();
         
         java.util.List<Transaction> transactions = new java.util.ArrayList<>();
         for (DocumentSnapshot document : querySnapshot.getDocuments()) {
             Transaction transaction = mapToTransaction(document);
             if (transaction != null) {
-                transaction.setUserId(userId);
+                transactions.add(transaction);
+            }
+        }
+        
+        return transactions;
+    }
+
+    public java.util.List<Transaction> getTransactionsByFromUser(String userId) throws ExecutionException, InterruptedException {
+        CollectionReference txCollection = firestore.collection(COLLECTION_TRANSACTIONS);
+        
+        ApiFuture<QuerySnapshot> future = txCollection
+            .whereIn("fromUserId", java.util.Arrays.asList(userId))
+            .orderBy("createdAt", Query.Direction.DESCENDING)
+            .get();
+        
+        QuerySnapshot querySnapshot = future.get();
+        
+        java.util.List<Transaction> transactions = new java.util.ArrayList<>();
+        for (DocumentSnapshot document : querySnapshot.getDocuments()) {
+            Transaction transaction = mapToTransaction(document);
+            if (transaction != null) {
+                transactions.add(transaction);
+            }
+        }
+        
+        return transactions;
+    }
+
+    public java.util.List<Transaction> getTransactionsBetweenUsers(String userId1, String userId2) throws ExecutionException, InterruptedException {
+        CollectionReference txCollection = firestore.collection(COLLECTION_TRANSACTIONS);
+        
+        ApiFuture<QuerySnapshot> future = txCollection
+            .whereEqualTo("fromUserId", userId1)
+            .whereEqualTo("toUserId", userId2)
+            .orderBy("createdAt", Query.Direction.DESCENDING)
+            .get();
+        
+        QuerySnapshot querySnapshot = future.get();
+        
+        java.util.List<Transaction> transactions = new java.util.ArrayList<>();
+        for (DocumentSnapshot document : querySnapshot.getDocuments()) {
+            Transaction transaction = mapToTransaction(document);
+            if (transaction != null) {
                 transactions.add(transaction);
             }
         }
@@ -90,6 +119,8 @@ public class TransactionRepository {
     private Map<String, Object> transactionToMap(Transaction transaction) {
         Map<String, Object> data = new HashMap<>();
         
+        data.put("fromUserId", transaction.getFromUserId());
+        data.put("toUserId", transaction.getToUserId());
         data.put("amount", transaction.getAmount());
         data.put("currency", transaction.getCurrency());
         data.put("type", transaction.getType());
@@ -138,6 +169,8 @@ public class TransactionRepository {
         
         return Transaction.builder()
             .transactionId(document.getId())
+            .fromUserId((String) data.get("fromUserId"))
+            .toUserId((String) data.get("toUserId"))
             .amount((String) data.get("amount"))
             .currency((String) data.get("currency"))
             .type((String) data.get("type"))

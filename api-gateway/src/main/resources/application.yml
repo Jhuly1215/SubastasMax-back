@@ -23,18 +23,15 @@ spring:
           uri: lb://auction-service
           predicates:
             - Path=/api/auctions/**
+        - id: transactions
+          uri: lb://wallet-service
+          predicates:
+            - Path=/api/transactions/**
         - id: wallets
           uri: lb://wallet-service
           predicates:
             - Path=/api/wallets/**
-        - id: wallet-transactions
-          uri: lb://wallet-service
-          predicates:
-            - Path=/api/transactions/**
-        - id: wallet-exchange-rates
-          uri: lb://wallet-service
-          predicates:
-            - Path=/api/exchange-rates/**
+
       globalcors:
         add-to-simple-url-handler-mapping: true
         corsConfigurations:

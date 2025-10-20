@@ -15,7 +15,6 @@ import java.util.concurrent.ExecutionException;
 
 @RestController
 @RequestMapping("/api/bids")
-@CrossOrigin(origins = "*")
 public class BidController {
 
     @Autowired

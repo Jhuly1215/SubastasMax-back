@@ -15,4 +15,3 @@ public record UpdateUserRequest(
     String phone,       // opcional
     String plan 
 ) {}
-

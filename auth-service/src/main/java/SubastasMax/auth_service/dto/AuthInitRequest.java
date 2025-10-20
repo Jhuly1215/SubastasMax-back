@@ -7,4 +7,3 @@ public record AuthInitRequest(
     String displayName,    // opcional
     String plan            // "FREE" | "PREMIUM"
 ) {}
-

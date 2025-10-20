@@ -14,4 +14,3 @@ public record UserResponse(
     String phone,       // opcional
     String plan 
 ) {}
-
