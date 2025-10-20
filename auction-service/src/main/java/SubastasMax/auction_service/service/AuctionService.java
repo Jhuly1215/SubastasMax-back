@@ -7,6 +7,7 @@ import SubastasMax.auction_service.exception.AuctionNotFoundException;
 import SubastasMax.auction_service.exception.UnauthorizedException;
 import SubastasMax.auction_service.model.Auction_model;
 import SubastasMax.auction_service.repository.AuctionRepository;
+import SubastasMax.auction_service.service.BiddingServiceClient;
 import com.google.cloud.Timestamp;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +23,7 @@ import java.util.stream.Collectors;
 public class AuctionService {
     
     private final AuctionRepository auctionRepository;
-    
+    private final BiddingServiceClient biddingServiceClient;
     /**
      * Crear una nueva subasta
      */
@@ -275,5 +276,31 @@ public class AuctionService {
     private Date timestampToDate(Timestamp timestamp) {
         if (timestamp == null) return null;
         return new Date(timestamp.getSeconds() * 1000);
+    }
+
+    public Auction_model closeAuction(String auctionId) throws ExecutionException, InterruptedException {
+        // 1️⃣ Obtener la subasta
+        Auction_model auction = auctionRepository.findById(auctionId)
+                .orElseThrow(() -> new RuntimeException("Auction not found"));
+
+        // 2️⃣ Consultar el highest bid desde Bidding Service
+        Map<String, Object> bidData = biddingServiceClient.getHighestBid(auctionId);
+        Double highestBid = (Double) bidData.getOrDefault("highestBid", 0.0);
+        String winnerId = (String) bidData.getOrDefault("winnerUserId", null);
+
+        // 3️⃣ Actualizar campos de la subasta
+        auction.setWinningBid(highestBid);
+        auction.setWinnerId(winnerId);
+        auction.setStatus("closed");
+        auction.setSettledAt(Timestamp.now());
+
+        // 4️⃣ Guardar cambios en Firestore
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("winningBid", auction.getWinningBid());
+        updates.put("winnerId", auction.getWinnerId());
+        updates.put("status", auction.getStatus());
+        updates.put("settledAt", auction.getSettledAt());
+
+        return auctionRepository.update(auction.getId(), updates);
     }
 }

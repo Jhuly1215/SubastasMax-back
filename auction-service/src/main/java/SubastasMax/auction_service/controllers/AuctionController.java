@@ -3,6 +3,7 @@ package SubastasMax.auction_service.controllers;
 import SubastasMax.auction_service.dto.AuctionResponse;
 import SubastasMax.auction_service.dto.CreateAuctionRequest;
 import SubastasMax.auction_service.dto.UpdateAuctionRequest;
+import SubastasMax.auction_service.model.Auction_model;
 import SubastasMax.auction_service.service.AuctionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -270,5 +271,26 @@ public class AuctionController {
                 .orElse("participante");*/ 
                 
                 "user"; // Temporal hasta integrar seguridad
+    }
+
+    @PostMapping("/{auctionId}/close")
+    public ResponseEntity<Map<String, Object>> closeAuction(@PathVariable String auctionId) {
+        try {
+            Auction_model closedAuction = auctionService.closeAuction(auctionId);
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("success", true);
+            result.put("message", "Auction closed successfully");
+            result.put("data", closedAuction);
+
+            return ResponseEntity.ok(result);
+
+        } catch (Exception e) {
+            log.error("Error closing auction", e);
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
     }
 }
