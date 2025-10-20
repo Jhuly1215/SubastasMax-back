@@ -53,6 +53,25 @@ services:
         condition: service_healthy
     restart: on-failure
 
+  a-service:
+    build: ./A-service
+    container_name: A-service
+    environment:
+      - CONFIG_SERVER_URL=${CONFIG_SERVER_URL}
+      - EUREKA_DEFAULT_ZONE=${EUREKA_DEFAULT_ZONE}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER}
+    volumes:
+      - ${FIREBASE_SECRETS_HOST_PATH}:${GOOGLE_APPLICATION_CREDENTIALS_CONTAINER}:ro
+    networks:
+      - subastas-network
+    depends_on:
+      config-server:
+        condition: service_healthy
+      discovery-service:
+        condition: service_healthy
+    restart: on-failure
+
   auth-service:
     build: ./auth-service
     container_name: auth-service
@@ -66,10 +85,7 @@ services:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
       - FIREBASE_SECRETS_DIR=${FIREBASE_SECRETS_DIR_CONTAINER}
       - SERVER_PORT=8081
-      - FIREBASE_SECRETS_DIR=${FIREBASE_SECRETS_DIR_CONTAINER}
-      - SERVER_PORT=8081
     volumes:
-      - ${FIREBASE_SECRETS_DIR_HOST}:${FIREBASE_SECRETS_DIR_CONTAINER}:ro
       - ${FIREBASE_SECRETS_DIR_HOST}:${FIREBASE_SECRETS_DIR_CONTAINER}:ro
     networks:
       - subastas-network
@@ -79,7 +95,6 @@ services:
       discovery-service:
         condition: service_healthy
     restart: on-failure
-
 
 
   auction-service:

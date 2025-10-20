@@ -83,7 +83,3 @@ dist/
 npm-debug.log*
 yarn-error.log*
 wallet-service/src/main/resources/wallet-service-key.json
-<<<<<<< HEAD
-
-=======
->>>>>>> 05a865013f2a00b4602e0d9c45a55b7cdcd06f9f

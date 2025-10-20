@@ -11,6 +11,6 @@ public record UserResponse(
     boolean disabled,
     List<String> roles,
     String avatarUrl,  // opcional
-    String phone,       // opcional
-    String plan 
+    String phone       // opcional
 ) {}
+
