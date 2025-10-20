@@ -7,16 +7,20 @@ spring:
     gateway:
       routes:
         - id: auth
-          uri: http://auth-service:8081
+          uri: lb://auth-service
           predicates:
             - Path=/auth/**
-
+        - id: admin-users
+          uri: lb://auth-service
+          predicates:
+            - Path=/admin/**
         - id: admin-service
-          uri: http://admin-service:8070
+          uri: lb://admin-service
           predicates:
             - Path=/admin/**
           filters:
-            - 'RewritePath=/admin/(?<segment>.*), /${segment}'
+            # eliminar el segmento /admin antes de enviar al admin-service
+            - StripPrefix=1
 
         - id: notification-service
           uri: http://notification-service:8060
@@ -27,49 +31,28 @@ spring:
           uri: http://bidding-service:8090
           predicates:
             - Path=/bidding-ws/**
+
         - id: auctions
           uri: lb://auction-service
           predicates:
             - Path=/api/auctions/**
+
         - id: wallets
           uri: lb://wallet-service
           predicates:
             - Path=/api/wallets/**
+
         - id: wallet-transactions
           uri: lb://wallet-service
           predicates:
             - Path=/api/transactions/**
+
         - id: wallet-exchange-rates
           uri: lb://wallet-service
           predicates:
             - Path=/api/exchange-rates/**
-      globalcors:
-        add-to-simple-url-handler-mapping: true
-        corsConfigurations:
-          '[/**]':
-            allowedOrigins:
-              - http://localhost:3000
-            allowedMethods:
-              - GET
-              - POST
-              - PUT
-              - DELETE
-              - PATCH
-              - OPTIONS
-            allowedHeaders:
-              - Authorization
-              - Content-Type
-              - X-Requested-With
-              - Accept
-              - Origin
-            exposedHeaders:
-              - "*"
-            allowCredentials: false
-            maxAge: 3600
 
-      # Global CORS settings for the gateway.
-      # allowedOrigins includes the frontend origin(s). We pick up NEXT_PUBLIC_API_BASE
-      # (provided in your frontend env) as one allowed origin and also add common dev origins.
+      # Global CORS configuration (single, coherent block)
       globalcors:
         - id: all
           allowedOrigins:
@@ -81,10 +64,18 @@ spring:
             - POST
             - PUT
             - DELETE
+            - PATCH
             - OPTIONS
           allowedHeaders:
+            - Authorization
+            - Content-Type
+            - X-Requested-With
+            - Accept
+            - Origin
+          exposedHeaders:
             - "*"
           allowCredentials: true
+          maxAge: 3600
 
 eureka:
   client:
