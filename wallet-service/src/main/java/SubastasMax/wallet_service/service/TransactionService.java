@@ -25,7 +25,7 @@ public class TransactionService {
             : RequestIdUtil.generateRequestId(dto.getFromUserId());
         
         Transaction transaction = Transaction.builder()
-            .fromUserId(dto.fromUserId())
+            .fromUserId(dto.getFromUserId())
             .toUserId(dto.getToUserId())
             .amount(dto.getAmount())
             .currency(dto.getCurrency())

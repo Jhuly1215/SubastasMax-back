@@ -1,4 +1,3 @@
-
 package SubastasMax.wallet_service.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
