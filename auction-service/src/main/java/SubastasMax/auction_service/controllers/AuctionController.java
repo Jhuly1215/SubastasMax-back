@@ -20,7 +20,6 @@ import java.util.Map;
 @RequestMapping("/api/auctions")
 @RequiredArgsConstructor
 @Slf4j
-@CrossOrigin(origins = "*")
 public class AuctionController {
     
     private final AuctionService auctionService;
@@ -36,7 +35,7 @@ public class AuctionController {
         
         try {
             /*String userId = authentication.getName();*/
-            String userId = "test-userid"; // Temporal hasta integrar seguridad
+            String userId = authentication.getName();
             AuctionResponse response = auctionService.createAuction(request, userId);
             
             Map<String, Object> result = new HashMap<>();
@@ -69,8 +68,8 @@ public class AuctionController {
             /*String userId = authentication.getName();
             String userRole = getUserRole(authentication);*/
 
-            String userId = "test-userid";
-            String userRole = "test";
+            String userId = authentication.getName();
+            String userRole = getUserRole(authentication);
             
             AuctionResponse response = auctionService.updateAuction(auctionId, request, userId, userRole);
             
@@ -191,7 +190,7 @@ public class AuctionController {
     public ResponseEntity<Map<String, Object>> getMyAuctions(Authentication authentication) {
         try {
             /*String userId = authentication.getName();*/
-            String userId = "test-userid";
+            String userId = authentication.getName();
             List<AuctionResponse> auctions = auctionService.getAuctionsByUser(userId);
             
             Map<String, Object> result = new HashMap<>();
@@ -220,11 +219,9 @@ public class AuctionController {
             Authentication authentication) {
         
         try {
-            /*String userId = authentication.getName();
-            String userRole = getUserRole(authentication);*/
             
-            String userId = "test-userid";
-            String userRole = "test";
+            String userId = authentication.getName();
+            String userRole = getUserRole(authentication);
             
             auctionService.deleteAuction(auctionId, userId, userRole);
             
