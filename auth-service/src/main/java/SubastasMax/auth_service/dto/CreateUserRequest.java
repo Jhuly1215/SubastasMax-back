@@ -11,6 +11,7 @@ public record CreateUserRequest(
     String displayName,
     List<String> roles,
     String avatarUrl,   // opcional
-    String phone        // opcional
+    String phone,        // opcional
+    String plan
 ) {}
 

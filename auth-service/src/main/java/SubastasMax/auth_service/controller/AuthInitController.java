@@ -3,7 +3,6 @@ package SubastasMax.auth_service.controller;
 
 import SubastasMax.auth_service.dto.AuthInitRequest;
 import SubastasMax.auth_service.service.UserService;
-import SubastasMax.auth_service.security.Role;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,7 +19,7 @@ public class AuthInitController {
         this.userService = userService;
     }
 
-    /** Llamar tras el primer login del cliente; crea/mergea el doc con el rol elegido */
+    /** Llamar tras el primer login del cliente; crea/mergea el doc con el rol y plan elegidos */
     @PostMapping("/init")
     public Map<String, Object> init(Authentication authentication,
                                     @RequestBody(required = false) AuthInitRequest body) throws Exception {
@@ -29,25 +28,42 @@ public class AuthInitController {
         // Lee email de Firebase para persistirlo
         String email = userService.getEmail(uid);
 
-        // Determinar rol elegido (solo público: PARTICIPANTE o SUBASTADOR)
-        // en AuthInitController.init(...)
-        String raw = null;
+        // Determinar rol elegido (solo PARTICIPANTE o SUBASTADOR)
+        String rawRole = null;
         if (body != null) {
             if (body.preferredRole() != null && !body.preferredRole().isBlank()) {
-                raw = body.preferredRole();
-            } else if (body.role() != null && !body.role().isBlank()) { // <-- alias
-                raw = body.role();
+                rawRole = body.preferredRole();
+            } else if (body.role() != null && !body.role().isBlank()) {
+                rawRole = body.role();
             }
         }
-        String preferred = (raw == null ? "PARTICIPANTE" : raw.trim().toUpperCase());
-        if (!preferred.equals("PARTICIPANTE") && !preferred.equals("SUBASTADOR")) {
-        preferred = "PARTICIPANTE"; // no permitir ADMIN desde cliente
+        String preferredRole = (rawRole == null ? "PARTICIPANTE" : rawRole.trim().toUpperCase());
+        if (!preferredRole.equals("PARTICIPANTE") && !preferredRole.equals("SUBASTADOR")) {
+            preferredRole = "PARTICIPANTE"; // no permitir ADMIN desde cliente
         }
-        userService.ensureUserDoc(uid, email, body != null ? body.displayName() : null, List.of(preferred));
 
+        // Crear o mergear documento base
+        userService.ensureUserDoc(uid, email, body != null ? body.displayName() : null, List.of(preferredRole));
+
+        // Manejo de plan (FREE | PROFESSIONAL)
+        String plan = null;
+        if (body != null && body.plan() != null && !body.plan().isBlank()) {
+            String up = body.plan().trim().toUpperCase();
+            if (up.equals("FREE") || up.equals("PROFESSIONAL")) {
+                userService.setPlan(uid, up); // guardamos en Firestore
+                plan = up;
+            }
+        } else {
+            plan = userService.getPlan(uid); // leer si ya tenía
+        }
 
         // Devuelve estado actual
         var roles = userService.getRoles(uid);
-        return Map.of("uid", uid, "email", email, "roles", roles);
+        return Map.of(
+                "uid", uid,
+                "email", email,
+                "roles", roles,
+                "plan", plan
+        );
     }
 }

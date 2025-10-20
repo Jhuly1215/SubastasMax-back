@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 public class UserAdminService {
 
     private final Firestore firestore;
-    private final UserService userService;   // lee/escribe roles, email, perfil
+    private final UserService userService;   // lee/escribe roles, email, perfil, plan
     private final RoleService roleService;   // sincroniza roles a custom claims
 
     public UserAdminService(
@@ -52,8 +52,18 @@ public class UserAdminService {
         return norm;
     }
 
+    private String normalizePlan(String raw) {
+        if (raw == null) return null;
+        String up = raw.trim().toUpperCase();
+        return switch (up) {
+            case "FREE", "PROFESSIONAL" -> up;
+            default -> null;
+        };
+    }
+
     private UserResponse toResponse(UserRecord ur, List<String> roles) throws Exception {
         Map<String, Object> extras = userService.getProfileExtras(ur.getUid());
+        String plan = (String) extras.get("plan"); // leído desde Firestore (si existe)
         return new UserResponse(
                 ur.getUid(),
                 ur.getEmail(),
@@ -61,7 +71,8 @@ public class UserAdminService {
                 ur.isDisabled(),
                 roles == null ? List.of() : roles,
                 (String) extras.get("avatarUrl"),
-                (String) extras.get("phone")
+                (String) extras.get("phone"),
+                plan
         );
     }
 
@@ -82,7 +93,7 @@ public class UserAdminService {
         List<String> roles = normalizeAndValidateRoles(req.roles());
         userService.setRoles(created.getUid(), roles);
 
-        // Doc base -> Firestore (usa la firma que ya tienes)
+        // Doc base -> Firestore
         userService.ensureUserDoc(
                 created.getUid(),
                 created.getEmail(),
@@ -90,15 +101,19 @@ public class UserAdminService {
                 roles
         );
 
-        // Extras de perfil -> Firestore (merge)
-        // (Estos métodos ya existen en tu UserService según lo que venías usando)
+        // Extras perfil -> Firestore (merge)
         userService.updateUserProfileFields(
                 created.getUid(),
                 req.displayName(),
-                req.avatarUrl(),   // requiere que CreateUserRequest tenga avatarUrl()
-                req.phone()        // y phone()
+                req.avatarUrl(),
+                req.phone()
         );
 
+        // Plan (opcional)
+        String plan = normalizePlan(req.plan());
+        if (plan != null) userService.setPlan(created.getUid(), plan);
+
+        // Claims
         if (syncClaims) {
             roleService.pushRolesToCustomClaims(created.getUid(), roles);
         }
@@ -114,7 +129,7 @@ public class UserAdminService {
 
     public List<UserResponse> listUsers(int maxResults, String pageTokenOpt) throws Exception {
         List<UserResponse> out = new ArrayList<>();
-        // Por simplicidad, primera página (el Admin SDK no acepta un pageToken arbitrario directamente).
+        // Por simplicidad, primera página
         ListUsersPage page = FirebaseAuth.getInstance().listUsers(null);
 
         for (ExportedUserRecord user : page.getValues()) {
@@ -127,7 +142,8 @@ public class UserAdminService {
                     user.isDisabled(),
                     roles == null ? List.of() : roles,
                     (String) extras.get("avatarUrl"),
-                    (String) extras.get("phone")
+                    (String) extras.get("phone"),
+                    (String) extras.get("plan") // devuelve el plan si está
             ));
             if (out.size() >= maxResults) break;
         }
@@ -151,6 +167,14 @@ public class UserAdminService {
                 req.avatarUrl(),
                 req.phone()
         );
+
+        // Plan (FREE | PROFESSIONAL) si vino en el request
+        if (req.plan() != null) {
+            String norm = normalizePlan(req.plan());
+            if (norm != null) {
+                userService.setPlan(uid, norm);
+            }
+        }
 
         // Roles
         List<String> roles;

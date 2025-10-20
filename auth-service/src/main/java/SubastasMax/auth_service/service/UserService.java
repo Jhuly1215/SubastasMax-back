@@ -70,7 +70,15 @@ public class UserService {
         }
         return List.of("PARTICIPANTE");
     }
-
+    private String normalizePlan(String raw) {
+        if (raw == null) return null;
+        String up = raw.trim().toUpperCase();
+        return switch (up) {
+            case "FREE", "PROFESSIONAL" -> up;
+            default -> null;
+        };
+    }
+    
     /**
      * Lee extras del perfil en Firestore:
      * - displayName (String)
@@ -84,12 +92,19 @@ public class UserService {
             Object dn = snap.get("displayName");
             Object av = snap.get("avatarUrl");
             Object ph = snap.get("phone");
-            if (dn instanceof String) out.put("displayName", dn);
-            if (av instanceof String) out.put("avatarUrl", av);
-            if (ph instanceof String) out.put("phone", ph);
+            Object pl = snap.get("plan");
+    
+            if (dn instanceof String s) out.put("displayName", s);
+            if (av instanceof String s) out.put("avatarUrl", s);
+            if (ph instanceof String s) out.put("phone", s);
+            if (pl instanceof String s) {
+                String norm = normalizePlan(s);
+                if (norm != null) out.put("plan", norm);
+            }
         }
         return out;
     }
+
 
     // ===== Escrituras / upserts =====
 
@@ -137,5 +152,20 @@ public class UserService {
             firestore.collection(COL_USERS).document(uid)
                     .set(patch, SetOptions.merge()).get();
         }
+    }
+    public String getPlan(String uid) throws Exception {
+        var snap = firestore.collection(COL_USERS).document(uid).get().get();
+        if (snap.exists()) {
+            Object p = snap.get("plan");
+            if (p instanceof String s && !s.isBlank()) return s.toUpperCase();
+        }
+        return null; // sin plan explícito
+    }
+
+    public void setPlan(String uid, String plan) throws Exception {
+        if (plan == null || plan.isBlank()) return;
+        firestore.collection(COL_USERS).document(uid)
+                .set(Map.of("plan", plan.toUpperCase()), SetOptions.merge())
+                .get();
     }
 }

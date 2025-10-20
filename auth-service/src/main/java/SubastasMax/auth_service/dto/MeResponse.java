@@ -8,5 +8,6 @@ public record MeResponse(
     String email,
     String displayName,  
     String avatarUrl,     
-    List<String> roles
+    List<String> roles,
+    String plan
 ) {}
