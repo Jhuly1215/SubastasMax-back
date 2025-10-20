@@ -1,0 +1,115 @@
+{
+	"info": {
+		"_postman_id": "2da29cdb-d7e9-4c77-a873-c9de5eee46eb",
+		"name": "TransactionController API - Wallet Service",
+		"description": "Colección para probar las operaciones del TransactionController (crear, obtener, actualizar transacciones) del servicio Wallet.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "43060204"
+	},
+	"item": [
+		{
+			"name": "Crear Transacción",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"userId\": \"user123\",\n  \"amount\": 150.75,\n  \"currency\": \"USD\",\n  \"type\": \"DEPOSIT\",\n  \"description\": \"Recarga inicial\",\n  \"requestId\": \"req-457\",\n  \"balanceBefore\": {\n    \"available\": 100.00,\n    \"total\": 120.00\n  },\n  \"balanceAfter\": {\n    \"available\": 250.75,\n    \"total\": 270.75\n  },\n  \"metadata\": {\n    \"source\": \"mobile_app\",\n    \"channel\": \"online\",\n    \"notes\": \"Transacción automática\"\n  }\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/transactions",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"transactions"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Obtener Transacción por ID de Usuario y Transacción",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/transactions/{{userId}}/{{transactionId}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"transactions",
+						"{{userId}}",
+						"{{transactionId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Actualizar Transacción",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"amount\": 200.50,\n  \"description\": \"Monto actualizado por error en recarga\",\n  \"status\": \"COMPLETED\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/transactions/{{userId}}/{{transactionId}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"transactions",
+						"{{userId}}",
+						"{{transactionId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getAllTransactionsByUser",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/transactions/user/{{userId}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"transactions",
+						"user",
+						"{{userId}}"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
