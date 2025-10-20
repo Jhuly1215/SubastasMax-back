@@ -19,6 +19,15 @@ spring:
           uri: http://bidding-service:8090
           predicates:
             - Path=/bidding-ws/**
+        - id: auctions
+          uri: lb://auction-service
+          predicates:
+            - Path=/api/auctions/**
+        - id: wallets
+          uri: lb://wallet-service
+          predicates:
+            - Path=/api/wallets/**
+
       globalcors:
         add-to-simple-url-handler-mapping: true
         corsConfigurations:
@@ -38,7 +47,7 @@ spring:
               - X-Requested-With
               - Accept
               - Origin
-            exposeHeaders:
+            exposedHeaders:
               - "*"
             allowCredentials: false
             maxAge: 3600
