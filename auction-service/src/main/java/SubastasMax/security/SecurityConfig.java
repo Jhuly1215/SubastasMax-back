@@ -31,6 +31,7 @@ SecurityFilterChain chain(HttpSecurity http, FirebaseAuthMvcFilter firebaseAuthM
         .requestMatchers(mvc.pattern("/actuator/**")).permitAll()
         .requestMatchers(mvc.pattern("/test/**")).permitAll()
         .requestMatchers(mvc.pattern("/public/**")).permitAll()
+        .requestMatchers(mvc.pattern("/api/auctions")).permitAll()
         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
         .anyRequest().authenticated()
     )

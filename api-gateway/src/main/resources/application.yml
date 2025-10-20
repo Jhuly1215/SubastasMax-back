@@ -36,7 +36,10 @@ spring:
           uri: lb://auction-service
           predicates:
             - Path=/api/auctions/**
-
+        - id: transactions
+          uri: lb://wallet-service
+          predicates:
+            - Path=/api/transactions/**
         - id: wallets
           uri: lb://wallet-service
           predicates:
