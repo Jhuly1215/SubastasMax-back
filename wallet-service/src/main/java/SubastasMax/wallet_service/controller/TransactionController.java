@@ -71,23 +71,51 @@ public class TransactionController {
         return ResponseEntity.ok(response);
     }
 
+    // TransactionController.java
     @GetMapping("/user/{userId}/all")
-    public ResponseEntity<List<TransactionResponseDTO>> getAllTransactionsByUser(
-            @PathVariable String userId) throws ExecutionException, InterruptedException {
-        List<Transaction> sentTransactions = transactionService.getTransactionsSentByUser(userId);
-        List<Transaction> receivedTransactions = transactionService.getTransactionsByUser(userId);
-        
-        List<Transaction> allTransactions = new java.util.ArrayList<>();
-        allTransactions.addAll(sentTransactions);
-        allTransactions.addAll(receivedTransactions);
-        
-        allTransactions.sort((t1, t2) -> t2.getCreatedAt().compareTo(t1.getCreatedAt()));
-        
-        List<TransactionResponseDTO> response = allTransactions.stream()
+    public ResponseEntity<?> getAllTransactionsByUser(@PathVariable String userId) {
+        try {
+            List<Transaction> sentTransactions = transactionService.getTransactionsSentByUser(userId);
+            List<Transaction> receivedTransactions = transactionService.getTransactionsByUser(userId);
+
+            // Evitar nulls
+            if (sentTransactions == null) sentTransactions = java.util.Collections.emptyList();
+            if (receivedTransactions == null) receivedTransactions = java.util.Collections.emptyList();
+
+            System.out.println("[/all] user=" + userId
+                + " sent=" + sentTransactions.size()
+                + " received=" + receivedTransactions.size());
+
+            List<Transaction> allTransactions = new java.util.ArrayList<>(sentTransactions.size() + receivedTransactions.size());
+            allTransactions.addAll(sentTransactions);
+            allTransactions.addAll(receivedTransactions);
+
+            // Ordenar DESC por createdAt, dejando nulls al final
+            java.util.Comparator<Transaction> byCreatedAtDescNullsLast =
+                java.util.Comparator.comparing(
+                    Transaction::getCreatedAt,
+                    java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder())
+                ).reversed();
+
+            allTransactions.sort(byCreatedAtDescNullsLast);
+
+            List<TransactionResponseDTO> response = allTransactions.stream()
                 .map(this::mapToResponseDTO)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(response);
+                .collect(java.util.stream.Collectors.toList());
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(java.util.Map.of(
+                    "error", "Error al listar transacciones",
+                    "message", e.getMessage()
+                ));
+        }
     }
+
+    
 
     @GetMapping("/between/{userId1}/{userId2}")
     public ResponseEntity<List<TransactionResponseDTO>> getTransactionsBetweenUsers(
