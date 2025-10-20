@@ -19,15 +19,17 @@ public class TransactionService {
     private TransactionRepository transactionRepository;
 
     public String createTransaction(TransactionCreateDTO dto) throws ExecutionException, InterruptedException {
-        // Genera requestId si no viene en el DTO
         String requestId = (dto.getRequestId() != null && !dto.getRequestId().isEmpty())
             ? dto.getRequestId()
             : RequestIdUtil.generateRequestId(dto.getFromUserId());
-        
+    
+        // IMPORTANTE: amount del DTO es String (según el nuevo contrato)
+        // Asegúrate de no pasarlo como null.
+    
         Transaction transaction = Transaction.builder()
             .fromUserId(dto.getFromUserId())
             .toUserId(dto.getToUserId())
-            .amount(dto.getAmount())
+            .amount(dto.getAmount() != null ? dto.getAmount() : "0.00") // <-- evita null
             .currency(dto.getCurrency())
             .type(dto.getType())
             .status("PENDING")
@@ -36,21 +38,35 @@ public class TransactionService {
             .balanceBefore(mapToBalance(dto.getBalanceBefore()))
             .balanceAfter(mapToBalance(dto.getBalanceAfter()))
             .metadata(mapToMetadata(dto.getMetadata()))
+            .createdAt(new java.util.Date()) // <-- siempre set
             .build();
-
+    
         return transactionRepository.createTransaction(transaction);
     }
+    
 
     public Transaction getTransaction(String transactionId) throws ExecutionException, InterruptedException {
         return transactionRepository.getTransaction(transactionId);
     }
 
-    public List<Transaction> getTransactionsByUser(String userId) throws ExecutionException, InterruptedException {
-        return transactionRepository.getAllTransactionsByUser(userId);
+    public List<Transaction> getTransactionsByUser(String userId) {
+        try {
+            List<Transaction> list = transactionRepository.getAllTransactionsByUser(userId);
+            return list != null ? list : java.util.Collections.emptyList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return java.util.Collections.emptyList();
+        }
     }
 
-    public List<Transaction> getTransactionsSentByUser(String userId) throws ExecutionException, InterruptedException {
-        return transactionRepository.getTransactionsByFromUser(userId);
+    public List<Transaction> getTransactionsSentByUser(String userId) {
+        try {
+            List<Transaction> list = transactionRepository.getTransactionsByFromUser(userId);
+            return list != null ? list : java.util.Collections.emptyList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return java.util.Collections.emptyList();
+        }
     }
 
     public List<Transaction> getTransactionsBetweenUsers(String userId1, String userId2) throws ExecutionException, InterruptedException {
