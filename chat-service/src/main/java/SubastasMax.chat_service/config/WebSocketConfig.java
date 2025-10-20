@@ -14,6 +14,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws-chat") // 🔹 endpoint del socket
                 .setAllowedOriginPatterns("*")
+                .addInterceptors(new WebSocketAuthInterceptor()) // ya lo tienes
                 .withSockJS(); // importante para compatibilidad
     }
 

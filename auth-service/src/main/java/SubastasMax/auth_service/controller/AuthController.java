@@ -29,8 +29,7 @@ public class AuthController {
                 ? (String) extras.get("displayName")
                 : userService.getDisplayNameFromAuth(uid);
         String avatarUrl = (String) extras.get("avatarUrl");
-        String plan = (String) extras.getOrDefault("plan", "FREE");
 
-        return new MeResponse(uid, email, displayName, avatarUrl, roles, plan);
+        return new MeResponse(uid, email, displayName, avatarUrl, roles);
     }
 }

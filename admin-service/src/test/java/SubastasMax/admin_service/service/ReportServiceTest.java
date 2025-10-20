@@ -5,8 +5,8 @@ import SubastasMax.admin_service.model.Event;
 import SubastasMax.admin_service.model.User;
 import SubastasMax.admin_service.repository.BidRepository;
 import SubastasMax.admin_service.repository.EventRepository;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 public class ReportServiceTest {
@@ -33,7 +33,7 @@ public class ReportServiceTest {
     @InjectMocks
     private ReportService reportService;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
     }

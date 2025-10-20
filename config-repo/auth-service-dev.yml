@@ -1,4 +1,4 @@
-gitserver:
+server:
   port: 0
 
 spring:
