@@ -27,7 +27,7 @@ spring:
           uri: lb://wallet-service
           predicates:
             - Path=/api/wallets/**
-        - id: wallet-transactions  # 👈 AGREGAR ESTO
+        - id: wallet-transactions 
           uri: lb://wallet-service
           predicates:
             - Path=/api/transactions/**

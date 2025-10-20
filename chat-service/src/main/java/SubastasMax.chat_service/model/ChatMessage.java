@@ -1,6 +1,6 @@
 // SubastasMax.chat_service.model.ChatMessage
 package SubastasMax.chat_service.model;
-
+ 
 public class ChatMessage {
     private String senderId;
     private String userName;   // 👈 NUEVO
