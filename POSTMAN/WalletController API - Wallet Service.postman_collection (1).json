@@ -1,0 +1,101 @@
+{
+	"info": {
+		"_postman_id": "6152565b-1962-4d0c-a3f2-f719573cdd34",
+		"name": "WalletController API - Wallet Service",
+		"description": "Colección para probar WalletController (crear, obtener y actualizar billeteras) del servicio Wallet",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "43060204"
+	},
+	"item": [
+		{
+			"name": "Crear Wallet",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"userId\": \"test-userid\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/wallets",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"wallets"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Obtener Wallet por usuario",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjlkMjEzMGZlZjAyNTg3ZmQ4ODYxODg2OTgyMjczNGVmNzZhMTExNjUiLCJ0eXAiOiJKV1QifQ.eyJuYW1lIjoiVGVzdGVyIEFkbWluIiwicm9sZXMiOlsiQURNSU4iLCJTVUJBU1RBRE9SIl0sImlzcyI6Imh0dHBzOi8vc2VjdXJldG9rZW4uZ29vZ2xlLmNvbS9zdWJhc3Rhc21heC1hdXRoIiwiYXVkIjoic3ViYXN0YXNtYXgtYXV0aCIsImF1dGhfdGltZSI6MTc2MDg4MTAyNCwidXNlcl9pZCI6ImlsR2tCRDBXbGhkdkJLanhUSUs1cWRQWVEzejIiLCJzdWIiOiJpbEdrQkQwV2xoZHZCS2p4VElLNXFkUFlRM3oyIiwiaWF0IjoxNzYwODgxMDI0LCJleHAiOjE3NjA4ODQ2MjQsImVtYWlsIjoidGVzdGVyQGV4YW1wbGUuY29tIiwiZW1haWxfdmVyaWZpZWQiOmZhbHNlLCJmaXJlYmFzZSI6eyJpZGVudGl0aWVzIjp7ImVtYWlsIjpbInRlc3RlckBleGFtcGxlLmNvbSJdfSwic2lnbl9pbl9wcm92aWRlciI6InBhc3N3b3JkIn19.nseZ-g8knhIUkiHywamw7BUBxPoIVtifYxHVzA0HRXQgrp5smRLUczTEWj1JA-AXOY3qnCxAU3hkggLMoNuomZG-8Jrxv2GtggzxcdWIsmlAUBVUe2TuJeskssM_U9XDL4uJvnIUagKz-wqu15CZljLnDt8idmcTTJpdJn3R5gvRJp0lW_STY29w-IShXEEdGmj-wZsTw0KQqSj_8LsnQxtG1CPXJMJgJC-sE31fIGoPzUB9k_dixXlw9KzDA4Kzciu4WlcY32wEHrHun5eLoquiztZL61TBuwIpW2GDnwoZjKz-PMgAJGOj7iiXb_yI6P59AZy_oJWsoyEiM3eGaA",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/wallets/{{userId}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"wallets",
+						"{{userId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Actualizar Wallet",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"userId\": \"test-userid\",\n  \"defaultCurrency\": \"USD\",\n  \"balances\": {\n    \"USD\": {\n      \"available\": 1500.75,\n      \"frozen\": 0.0,\n      \"total\": 1500.75\n    },\n    \"EUR\": {\n      \"available\": 0.0,\n      \"frozen\": 0.0,\n      \"total\": 0.0\n    },\n    \"BOB\": {\n      \"available\": 0.0,\n      \"frozen\": 0.0,\n      \"total\": 0.0\n    }\n  },\n  \"activeBids\": {}\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/wallets/{{userId}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"wallets",
+						"{{userId}}"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
