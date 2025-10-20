@@ -10,4 +10,3 @@ ENV JAVA_OPTS="-Djava.security.egd=file:/dev/./urandom"
 COPY --from=build /app/target/*.jar app.jar
 # No es necesario exponer puerto: el gateway enruta a través de Eureka
 ENTRYPOINT ["sh","-c","java $JAVA_OPTS -jar /app/app.jar"]
-
